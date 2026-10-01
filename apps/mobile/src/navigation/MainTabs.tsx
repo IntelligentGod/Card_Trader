@@ -4,6 +4,7 @@ import { MyCollectionScreen } from '../features/collection/screens/MyCollectionS
 import { EventsScreen } from '../features/events/screens/EventsScreen';
 import { DiscoverScreen } from '../features/home/DiscoverScreen';
 import { MyProfileScreen } from '../features/profile/MyProfileScreen';
+import { useNotificationAlerts } from '../features/notifications/phoneAlerts';
 import { ActiveTradesScreen } from '../features/trades/screens/TradeListScreens';
 import { colors } from '../theme';
 import type { MainTabParamList } from './types';
@@ -20,6 +21,8 @@ const ICONS: Record<keyof MainTabParamList, [keyof typeof Ionicons.glyphMap, key
 
 /** Discover | Inventory | Trade | Events | Profile */
 export function MainTabs() {
+  useNotificationAlerts();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

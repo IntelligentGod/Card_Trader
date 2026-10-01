@@ -204,6 +204,8 @@ export interface SeedUser {
   location: string;
   socialLinks: Record<string, string>;
   vendor?: SeedVendor;
+  /** ADMIN opens the admin console (mobile Profile tab and the admin website) */
+  role?: 'ADMIN';
   items: SeedItem[];
 }
 
@@ -261,6 +263,16 @@ export const SEED_USERS: SeedUser[] = [
     bio: 'I run Texas card shows. Vendors: apply in the app, tables are assigned first come, first served.',
     location: 'Austin, TX',
     socialLinks: { website: 'https://texascardshows.example.com' },
+    items: [],
+  },
+  {
+    email: 'admin@example.com',
+    username: 'admin',
+    displayName: 'Card Trader Admin',
+    bio: 'Support account for the Card Trader team.',
+    location: 'Austin, TX',
+    socialLinks: {},
+    role: 'ADMIN',
     items: [],
   },
 ];

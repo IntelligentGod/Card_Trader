@@ -6,6 +6,7 @@ import type {
   Paginated,
   UnreadCountResponse,
 } from '@card-trader/shared';
+import { Errors } from '../../common/errors/app.exception';
 import { pageArgs, toPage, type CursorQueryDto } from '../../common/pagination/pagination';
 import { toIso } from '../../common/utils/dates';
 import { PrismaService, type Tx } from '../../prisma/prisma.service';
@@ -44,6 +45,7 @@ function toResponse(row: Notification): NotificationResponse {
     title: row.title,
     body: row.body,
     data: readData(row.data),
+    isRead: row.readAt !== null,
     readAt: toIso(row.readAt),
     createdAt: row.createdAt.toISOString(),
   };
@@ -80,6 +82,15 @@ export class NotificationsService {
 
   async unreadCount(userId: string): Promise<UnreadCountResponse> {
     return { count: await this.prisma.notification.count({ where: { userId, readAt: null } }) };
+  }
+
+  /** Opening one notification. Someone else's id behaves like an unknown one. */
+  async markOneRead(userId: string, id: string): Promise<UnreadCountResponse> {
+    const updated = await this.prisma.notification.updateMany({ where: { id, userId, readAt: null }, data: { readAt: new Date() } });
+    if (updated.count === 0 && !(await this.prisma.notification.findFirst({ where: { id, userId }, select: { id: true } }))) {
+      throw Errors.notFound('NOTIFICATION_NOT_FOUND', 'Notification not found');
+    }
+    return this.unreadCount(userId);
   }
 
   /** Marks the given notifications (or all) as read. Other users' ids are ignored. */

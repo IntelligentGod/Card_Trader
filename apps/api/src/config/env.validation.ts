@@ -13,6 +13,8 @@ import {
 } from 'class-validator';
 
 const toInt = ({ value }: { value: unknown }) => (value === undefined || value === '' ? undefined : Number(value));
+/** "KEY=" in an env file means not set. */
+const emptyToUndefined = ({ value }: { value: unknown }) => (value === '' ? undefined : value);
 const toBool = ({ value }: { value: unknown }) => value === true || value === 'true' || value === '1';
 
 /** Environment is validated at boot: the process refuses to start with bad config. */
@@ -64,6 +66,82 @@ export class EnvironmentVariables {
   @Min(0)
   TRUST_PROXY = 0;
 
+  /** Comma-separated browser origins allowed to call the API (the admin website). Empty = no CORS. */
+  @IsString()
+  CORS_ORIGINS = '';
+
+  // ── Super admin bootstrap (created once on startup if the email has no account) ──
+  @Transform(emptyToUndefined)
+  @IsOptional()
+  @IsString()
+  SUPER_ADMIN_EMAIL?: string;
+
+  /** Never commit this. Only read when the super admin account does not exist yet. */
+  @Transform(emptyToUndefined)
+  @IsOptional()
+  @IsString()
+  @MinLength(12, { message: 'SUPER_ADMIN_INITIAL_PASSWORD must be at least 12 characters' })
+  SUPER_ADMIN_INITIAL_PASSWORD?: string;
+
+  // ── Google / Apple sign-in: the `aud` values our ID tokens may carry ──
+  /** Comma-separated OAuth client ids (the Web client id the app passes to Google Sign-In, plus iOS/Android ids). */
+  @IsString()
+  GOOGLE_CLIENT_IDS = '';
+
+  /** Comma-separated Apple audiences: the iOS bundle id (com.cardtrader.app). */
+  @IsString()
+  APPLE_CLIENT_IDS = '';
+
+  // ── Two-factor authentication ──
+  /** 32 random bytes, base64. Encrypts TOTP secrets at rest. Changing it disables every user's 2FA. */
+  @Transform(emptyToUndefined)
+  @IsOptional()
+  @IsString()
+  TWO_FACTOR_ENCRYPTION_KEY?: string;
+
+  /** Shown in authenticator apps next to the account. */
+  @IsString()
+  TWO_FACTOR_ISSUER = 'Card Trader';
+
+  // ── Email (SMTP) ──
+  @Transform(emptyToUndefined)
+  @IsOptional()
+  @IsString()
+  SMTP_HOST?: string;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  SMTP_PORT = 587;
+
+  /** true for port 465 (implicit TLS); false uses STARTTLS when the server offers it */
+  @Transform(toBool)
+  @IsBoolean()
+  SMTP_SECURE = false;
+
+  @Transform(emptyToUndefined)
+  @IsOptional()
+  @IsString()
+  SMTP_USER?: string;
+
+  @Transform(emptyToUndefined)
+  @IsOptional()
+  @IsString()
+  SMTP_PASSWORD?: string;
+
+  @IsString()
+  EMAIL_FROM = 'Card Trader <no-reply@cardtrader.local>';
+
+  @IsString()
+  SUPPORT_EMAIL = 'support@cardtrader.local';
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @Max(168)
+  EMAIL_VERIFICATION_TTL_HOURS = 24;
+
   @IsString()
   PRICING_PROVIDERS = 'MOCK';
 
@@ -99,6 +177,13 @@ export function validateEnv(raw: Record<string, unknown>): EnvironmentVariables 
   }
   if (config.NODE_ENV === 'production' && config.JWT_ACCESS_SECRET.startsWith('change-me')) {
     throw new Error('JWT_ACCESS_SECRET must be changed in production');
+  }
+  if (config.TWO_FACTOR_ENCRYPTION_KEY && Buffer.from(config.TWO_FACTOR_ENCRYPTION_KEY, 'base64').length !== 32) {
+    throw new Error('TWO_FACTOR_ENCRYPTION_KEY must be 32 bytes, base64-encoded');
+  }
+  if (config.NODE_ENV === 'production') {
+    if (!config.TWO_FACTOR_ENCRYPTION_KEY) throw new Error('TWO_FACTOR_ENCRYPTION_KEY is required in production');
+    if (!config.SMTP_HOST) throw new Error('SMTP_HOST is required in production (verification emails)');
   }
   return config;
 }

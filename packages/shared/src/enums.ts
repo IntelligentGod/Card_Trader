@@ -3,6 +3,31 @@
  * These mirror the Prisma enums; apps/api has a test asserting they stay in sync.
  */
 
+/** BLOCKED: an admin blocked the account. DISABLED: switched off (kept for history). */
+export const UserStatus = {
+  ACTIVE: 'ACTIVE',
+  BLOCKED: 'BLOCKED',
+  DISABLED: 'DISABLED',
+} as const;
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
+
+/** ADMIN manages USER accounts; SUPER_ADMIN also manages admins and is invisible to them. */
+export const UserRole = {
+  USER: 'USER',
+  ADMIN: 'ADMIN',
+  SUPER_ADMIN: 'SUPER_ADMIN',
+} as const;
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+export const ADMIN_ROLES: readonly UserRole[] = ['ADMIN', 'SUPER_ADMIN'];
+export const isAdminRole = (role: string | null | undefined): boolean => role === 'ADMIN' || role === 'SUPER_ADMIN';
+
+export const AuthProviderType = {
+  PASSWORD: 'PASSWORD',
+  GOOGLE: 'GOOGLE',
+  APPLE: 'APPLE',
+} as const;
+export type AuthProviderType = (typeof AuthProviderType)[keyof typeof AuthProviderType];
+
 export const CardCategory = {
   POKEMON: 'POKEMON',
   ONE_PIECE: 'ONE_PIECE',
@@ -119,6 +144,8 @@ export const NotificationType = {
   EVENT_UPDATED: 'EVENT_UPDATED',
   EVENT_CANCELLED: 'EVENT_CANCELLED',
   EVENT_REMINDER: 'EVENT_REMINDER',
+  ANNOUNCEMENT: 'ANNOUNCEMENT',
+  ACCOUNT_SECURITY: 'ACCOUNT_SECURITY',
 } as const;
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 

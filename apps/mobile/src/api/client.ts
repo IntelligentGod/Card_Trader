@@ -44,6 +44,34 @@ interface RequestOptions {
 const REFRESH_MARGIN_MS = 30_000;
 let refreshInFlight: Promise<string | null> | null = null;
 
+/** 403 codes after which the session is over (an admin blocked or disabled the account). */
+const ACCOUNT_CLOSED_CODES = new Set(['ACCOUNT_BLOCKED', 'ACCOUNT_DISABLED']);
+
+/**
+ * What the app does when any request reports that the session changed. Kept as
+ * injected callbacks so this module doesn't import the session actions (cycle).
+ */
+interface SessionHandlers {
+  /** sign out and show `message` on the sign-in screen */
+  onAccountClosed: (message: string) => void;
+  /** an admin reset the password: refetch /users/me so the forced change screen shows */
+  onPasswordChangeRequired: () => void;
+  /** the access token was revoked (e.g. password changed elsewhere) and refresh failed */
+  onSessionEnded: (message: string) => void;
+}
+
+let sessionHandlers: Partial<SessionHandlers> = {};
+
+export function registerSessionHandlers(handlers: SessionHandlers): void {
+  sessionHandlers = handlers;
+}
+
+function reportSessionError(error: ApiError): void {
+  if (error.status !== 403) return;
+  if (ACCOUNT_CLOSED_CODES.has(error.code)) sessionHandlers.onAccountClosed?.(error.message);
+  else if (error.code === 'PASSWORD_CHANGE_REQUIRED') sessionHandlers.onPasswordChangeRequired?.();
+}
+
 /**
  * Exchanges the stored refresh token for a new access token. Single-flight:
  * concurrent callers share one request, because the server treats reuse of a
@@ -69,7 +97,14 @@ export function refreshAccessToken(): Promise<string | null> {
         useSession.getState().setSignedOut();
         return null;
       }
-      if (!response.ok) throw await toApiError(response);
+      if (!response.ok) {
+        const error = await toApiError(response);
+        if (error.status === 403 && ACCOUNT_CLOSED_CODES.has(error.code)) {
+          sessionHandlers.onAccountClosed?.(error.message);
+          return null;
+        }
+        throw error;
+      }
       const tokens = (await response.json()) as AuthTokens;
       await secureStorage.setRefreshToken(tokens.refreshToken);
       useSession.getState().setAccessToken(tokens);
@@ -121,12 +156,21 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   let response = await send(token);
   if (auth && response.status === 401) {
+    const rejected = await toApiError(response);
     token = await refreshAccessToken();
-    if (!token) throw new ApiError(401, 'AUTH_REQUIRED', 'Please sign in again');
+    if (!token) {
+      // "Your password changed. Please sign in again." — worth showing on the sign-in screen.
+      if (rejected.code === 'ACCESS_TOKEN_INVALID') sessionHandlers.onSessionEnded?.(rejected.message);
+      throw new ApiError(401, 'AUTH_REQUIRED', rejected.code === 'ACCESS_TOKEN_INVALID' ? rejected.message : 'Please sign in again');
+    }
     response = await send(token);
   }
 
-  if (!response.ok) throw await toApiError(response);
+  if (!response.ok) {
+    const error = await toApiError(response);
+    if (auth) reportSessionError(error);
+    throw error;
+  }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }

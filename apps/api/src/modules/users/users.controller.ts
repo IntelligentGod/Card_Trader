@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { MeResponse, PublicProfile, QrPayload } from '@card-trader/shared';
 import type { AuthUser } from '../../common/auth/auth-user';
-import { CurrentUser } from '../../common/auth/decorators';
+import { AllowWhilePasswordChangeRequired, CurrentUser } from '../../common/auth/decorators';
 import { UpdateMeDto, UpsertVendorProfileDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 
@@ -13,7 +13,9 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 
+  /** Reachable during a pending password change so the app can show that screen. */
   @Get('me')
+  @AllowWhilePasswordChangeRequired()
   getMe(@CurrentUser() user: AuthUser): Promise<MeResponse> {
     return this.users.getMe(user.userId);
   }

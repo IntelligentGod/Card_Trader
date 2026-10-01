@@ -1,4 +1,4 @@
-import type { MoverWindow, ValueRange } from '@card-trader/shared';
+import type { AdminAuditQuery, AdminCardListQuery, AdminTradeListQuery, AdminUserListQuery, MoverWindow, ValueRange } from '@card-trader/shared';
 import type { EventSearchQuery } from '@card-trader/shared';
 import type { CollectionFilters, EventListFilters, PublicCollectionFilters } from './endpoints';
 
@@ -32,12 +32,34 @@ export const queryKeys = {
 
   events: ['events'] as const,
   eventList: (filters: EventListFilters) => ['events', 'list', filters] as const,
+  /** First page only (useQuery). Kept apart from eventList, which holds useInfiniteQuery pages. */
+  eventListFirstPage: (filters: EventListFilters) => ['events', 'list', 'first-page', filters] as const,
   event: (id: string) => ['events', 'detail', id] as const,
   eventApplications: (id: string) => ['events', 'detail', id, 'applications'] as const,
   eventMyInventory: (id: string) => ['events', 'detail', id, 'my-inventory'] as const,
   eventSearch: (id: string, filters: EventSearchQuery) => ['events', 'detail', id, 'search', filters] as const,
 
   notifications: ['notifications'] as const,
-  notificationList: ['notifications', 'list'] as const,
+  /** latest 6 (useQuery) — kept apart from notificationHistory, which holds useInfiniteQuery pages */
+  notificationRecent: ['notifications', 'recent'] as const,
+  notificationHistory: ['notifications', 'history'] as const,
   unreadCount: ['notifications', 'unread'] as const,
+
+  // Admin console: own prefix, and one key per query so plain and infinite queries never share an entry.
+  admin: ['admin'] as const,
+  adminOverview: ['admin', 'overview'] as const,
+  adminUserList: (filters: AdminUserListQuery) => ['admin', 'users', 'list', filters] as const,
+  adminUser: (publicId: string) => ['admin', 'users', 'detail', publicId] as const,
+  adminUserCollection: (publicId: string) => ['admin', 'users', 'detail', publicId, 'collection'] as const,
+  adminUserTrades: (publicId: string) => ['admin', 'users', 'detail', publicId, 'trades'] as const,
+  adminUserReviews: (publicId: string) => ['admin', 'users', 'detail', publicId, 'reviews'] as const,
+  adminTradeList: (filters: AdminTradeListQuery) => ['admin', 'trades', 'list', filters] as const,
+  adminTrade: (id: string) => ['admin', 'trades', 'detail', id] as const,
+  adminUserHistory: (publicId: string) => ['admin', 'users', 'detail', publicId, 'history'] as const,
+  adminCards: ['admin', 'cards'] as const,
+  adminCardList: (filters: AdminCardListQuery) => ['admin', 'cards', 'list', filters] as const,
+  adminCard: (id: string) => ['admin', 'cards', 'detail', id] as const,
+  adminAnalytics: ['admin', 'analytics'] as const,
+  adminAudit: ['admin', 'audit'] as const,
+  adminAuditList: (filters: AdminAuditQuery) => ['admin', 'audit', 'list', filters] as const,
 };

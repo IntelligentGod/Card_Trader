@@ -8,7 +8,9 @@ import { Button } from '../../../components/Button';
 import { TextField } from '../../../components/Controls';
 import { Screen } from '../../../components/Screen';
 import type { RootScreenProps } from '../../../navigation/types';
+import { useAuthNotice } from '../../../stores/authNotice';
 import { colors, spacing } from '../../../theme';
+import { SocialSignInButtons } from '../components/SocialSignInButtons';
 import { completeSignIn } from '../sessionActions';
 import { hasErrors, normalizeUsername, validateRegister, type AuthFormErrors } from '../validation';
 
@@ -22,7 +24,11 @@ export function RegisterScreen({ navigation }: RootScreenProps<'Register'>) {
   const register = useMutation({
     mutationFn: () =>
       api.auth.register({ email: email.trim(), password, username: normalizeUsername(username), displayName: displayName.trim() }),
-    onSuccess: completeSignIn,
+    onSuccess: (response) => {
+      // A verification link was emailed: say so once, before the app opens.
+      if (!response.user.emailVerified) useAuthNotice.getState().setVerifyEmailIntro(true);
+      return completeSignIn(response);
+    },
   });
 
   const submit = () => {
@@ -71,6 +77,10 @@ export function RegisterScreen({ navigation }: RootScreenProps<'Register'>) {
         />
         {register.error ? <AppText color={colors.negative}>{errorMessage(register.error)}</AppText> : null}
         <Button title="Create account" onPress={submit} loading={register.isPending} />
+        <SocialSignInButtons
+          mode="signUp"
+          onChallenge={(c) => navigation.navigate('TwoFactorVerify', { challengeToken: c.challengeToken, expiresIn: c.expiresIn })}
+        />
         <Button title="I already have an account" variant="ghost" onPress={() => navigation.goBack()} />
       </Screen>
     </KeyboardAvoidingView>

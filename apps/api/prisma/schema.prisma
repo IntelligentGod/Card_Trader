@@ -13,10 +13,24 @@ datasource db {
 }
 
 // ─────────────── Enums ───────────────
+/// BLOCKED: an admin blocked the account. DISABLED: switched off (kept for history).
 enum UserStatus {
   ACTIVE
-  SUSPENDED
-  DELETED
+  BLOCKED
+  DISABLED
+}
+
+/// ADMIN manages USER accounts. SUPER_ADMIN also manages admins; admins never see it.
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AuthProviderType {
+  PASSWORD
+  GOOGLE
+  APPLE
 }
 
 enum CardCategory {
@@ -108,6 +122,10 @@ enum NotificationType {
   EVENT_UPDATED
   EVENT_CANCELLED
   EVENT_REMINDER
+  /// sent by a super admin to every user
+  ANNOUNCEMENT
+  /// password, 2FA, sign-in method or status changed on the account
+  ACCOUNT_SECURITY
 }
 
 // ─────────────── Identity ───────────────
@@ -115,10 +133,34 @@ model User {
   id           String     @id @default(uuid()) @db.Uuid
   publicId     String     @unique @db.VarChar(16)
   email        String     @unique @db.VarChar(254)
-  passwordHash String
+  /// null for accounts that only sign in with Google/Apple
+  passwordHash String?
   status       UserStatus @default(ACTIVE)
+  role         UserRole   @default(USER)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+
+  emailVerifiedAt          DateTime?
+  /// set by an admin password reset: every endpoint except changing the password is refused
+  mustChangePassword       Boolean   @default(false)
+  /// access tokens issued before this are rejected
+  passwordChangedAt        DateTime?
+  lastLoginAt              DateTime?
+  failedLoginCount         Int       @default(0)
+  loginLockedUntil         DateTime?
+  blockedAt                DateTime?
+  blockedById              String?   @db.Uuid
+  blockReason              String?   @db.VarChar(500)
+  twoFactorEnabled         Boolean   @default(false)
+  /// AES-256-GCM, key from TWO_FACTOR_ENCRYPTION_KEY; never returned by the API
+  twoFactorSecretEncrypted String?   @db.VarChar(255)
+  /// last accepted TOTP time step, so a code cannot be replayed
+  twoFactorLastStep        Int?
+
+  authProviders           UserAuthProvider[]
+  emailVerificationTokens EmailVerificationToken[]
+  recoveryCodes           TwoFactorRecoveryCode[]
+  loginChallenges         LoginChallenge[]
 
   profile             Profile?
   refreshTokens       RefreshToken[]
@@ -134,6 +176,7 @@ model User {
   vendorApplications  EventVendor[]
   savedEvents         EventSave[]
   notifications       Notification[]
+  adminActions        AdminAuditLog[]
 }
 
 model Profile {
@@ -577,4 +620,94 @@ model Notification {
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([userId, readAt])
+}
+
+// ─────────────── Admin ───────────────
+enum AdminTargetType {
+  USER
+  CARD
+  /// app-wide actions such as an announcement to every user
+  SYSTEM
+}
+
+/// Every change an admin makes: who, what, when, and the before/after values.
+model AdminAuditLog {
+  id         String          @id @default(uuid()) @db.Uuid
+  adminId    String          @db.Uuid
+  targetType AdminTargetType
+  /// User.id or Card.id; not a foreign key so the history outlives the row.
+  targetId   String          @db.Uuid
+  /// e.g. USER_UPDATED, USER_STATUS_CHANGED, VENDOR_UPDATED, CARD_UPDATED
+  action     String          @db.VarChar(40)
+  /// { field: { from, to } }
+  changes    Json            @default("{}")
+  reason     String?         @db.VarChar(500)
+  ipAddress  String?         @db.VarChar(64)
+  createdAt  DateTime        @default(now())
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@index([targetType, targetId, createdAt(sort: Desc)])
+  @@index([adminId, createdAt(sort: Desc)])
+}
+
+// ─────────────── Sign-in security ───────────────
+/// How a user can sign in. Provider passwords and OAuth tokens are never stored.
+model UserAuthProvider {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  provider       AuthProviderType
+  /// Google/Apple "sub"; the user id for PASSWORD
+  providerUserId String           @db.VarChar(255)
+  providerEmail  String?          @db.VarChar(254)
+  createdAt      DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
+}
+
+/// Only the SHA-256 of the emailed token is stored; single use, expires.
+model EmailVerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+/// Shown once at 2FA setup; stored as SHA-256, each usable once.
+model TwoFactorRecoveryCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  codeHash  String    @unique @db.Char(64)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// The step between a correct password/OAuth sign-in and the 2FA code. No session exists yet.
+model LoginChallenge {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  tokenHash String           @unique @db.Char(64)
+  /// PASSWORD | GOOGLE | APPLE: how the first factor was proven
+  method    AuthProviderType
+  attempts  Int              @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

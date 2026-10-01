@@ -1,8 +1,39 @@
 import type {
   AddTradeItemRequest,
+  AdminAnalytics,
+  AdminAuditEntry,
+  AdminAuditQuery,
+  AdminBlockRequest,
+  AdminBroadcastRequest,
+  AdminBroadcastResponse,
+  AdminCardDetail,
+  AdminCardListItem,
+  AdminCardListQuery,
+  AdminChangeRoleRequest,
+  AdminCreateAdminRequest,
+  AdminOverview,
+  AdminResetPasswordRequest,
+  AdminTradeDetail,
+  AdminTradeListItem,
+  AdminTradeListQuery,
+  AdminUpdateCardRequest,
+  AdminUpdateUserRequest,
+  AdminUpdateVendorRequest,
+  AdminUserDetail,
+  AdminUserListItem,
+  AdminUserListQuery,
+  AdminUserReviews,
   ApplyAsVendorRequest,
   ApproveVendorRequest,
+  AppleSignInRequest,
+  AuthProviderType,
   AuthResponse,
+  ChangePasswordRequest,
+  LoginResponse,
+  RecoveryCodesResponse,
+  TwoFactorProofRequest,
+  TwoFactorSetupResponse,
+  TwoFactorVerifyRequest,
   CardCategory,
   CardSetSummary,
   CardSummary,
@@ -84,9 +115,28 @@ export interface EventListFilters {
 export const api = {
   auth: {
     register: (body: RegisterRequest) => apiRequest<AuthResponse>('/auth/register', { method: 'POST', body, auth: false }),
-    login: (body: LoginRequest) => apiRequest<AuthResponse>('/auth/login', { method: 'POST', body, auth: false }),
+    // Sign-in answers with a session, or with a 2FA challenge to finish via verifyTwoFactor.
+    login: (body: LoginRequest) => apiRequest<LoginResponse>('/auth/login', { method: 'POST', body, auth: false }),
+    google: (idToken: string) => apiRequest<LoginResponse>('/auth/google', { method: 'POST', body: { idToken }, auth: false }),
+    apple: (body: AppleSignInRequest) => apiRequest<LoginResponse>('/auth/apple', { method: 'POST', body, auth: false }),
+    verifyTwoFactor: (body: TwoFactorVerifyRequest) =>
+      apiRequest<AuthResponse>('/auth/2fa/verify', { method: 'POST', body, auth: false }),
     logout: (refreshToken: string) =>
       apiRequest<void>('/auth/logout', { method: 'POST', body: { refreshToken }, auth: false }),
+    /** returns new tokens; every other session is signed out */
+    changePassword: (body: ChangePasswordRequest) =>
+      apiRequest<AuthResponse>('/auth/change-password', { method: 'POST', body }),
+    resendVerification: () => apiRequest<void>('/auth/resend-verification', { method: 'POST' }),
+    twoFactorSetup: () => apiRequest<TwoFactorSetupResponse>('/auth/2fa/setup', { method: 'POST' }),
+    twoFactorEnable: (code: string) => apiRequest<RecoveryCodesResponse>('/auth/2fa/enable', { method: 'POST', body: { code } }),
+    twoFactorDisable: (body: TwoFactorProofRequest) => apiRequest<void>('/auth/2fa/disable', { method: 'POST', body }),
+    regenerateRecoveryCodes: (body: TwoFactorProofRequest) =>
+      apiRequest<RecoveryCodesResponse>('/auth/2fa/recovery-codes', { method: 'POST', body }),
+    linkGoogle: (idToken: string) => apiRequest<MeResponse>('/auth/providers/google', { method: 'POST', body: { idToken } }),
+    linkApple: (body: Omit<AppleSignInRequest, 'fullName'>) =>
+      apiRequest<MeResponse>('/auth/providers/apple', { method: 'POST', body }),
+    unlinkProvider: (provider: Exclude<AuthProviderType, 'PASSWORD'>) =>
+      apiRequest<MeResponse>(`/auth/providers/${provider}`, { method: 'DELETE' }),
   },
 
   users: {
@@ -196,8 +246,61 @@ export const api = {
   },
 
   notifications: {
-    list: (cursor?: string) => apiRequest<Paginated<NotificationResponse>>(`/notifications${query({ cursor, limit: 30 })}`),
+    /** newest first; "Show all" when nextCursor is set */
+    recent: (limit = 6) => apiRequest<Paginated<NotificationResponse>>(`/notifications${query({ limit })}`),
+    history: (cursor?: string) => apiRequest<Paginated<NotificationResponse>>(`/notifications${query({ cursor, limit: 30 })}`),
     unreadCount: () => apiRequest<UnreadCountResponse>('/notifications/unread-count'),
-    markRead: (ids?: string[]) => apiRequest<UnreadCountResponse>('/notifications/read', { method: 'POST', body: { ids } }),
+    /** answers the unread count after the change */
+    markOneRead: (id: string) => apiRequest<UnreadCountResponse>(`/notifications/${id}/read`, { method: 'PATCH' }),
+    markAllRead: () => apiRequest<UnreadCountResponse>('/notifications/read-all', { method: 'PATCH' }),
+  },
+
+  /** Admin console; every route answers 403 ADMIN_ONLY for non-admins. */
+  admin: {
+    overview: () => apiRequest<AdminOverview>('/admin/overview'),
+    users: (filters: AdminUserListQuery, cursor?: string) =>
+      apiRequest<Paginated<AdminUserListItem>>(`/admin/users${query({ ...filters, cursor, limit: 20 })}`),
+    user: (publicId: string) => apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}`),
+    /** includes PERSONAL cards */
+    userCollection: (publicId: string, cursor?: string) =>
+      apiRequest<Paginated<CollectionItemResponse>>(
+        `/admin/users/${encodeURIComponent(publicId)}/collection${query({ cursor, limit: 20 })}`,
+      ),
+    userTrades: (publicId: string, cursor?: string) =>
+      apiRequest<Paginated<AdminTradeListItem>>(`/admin/users/${encodeURIComponent(publicId)}/trades${query({ cursor, limit: 20 })}`),
+    userReviews: (publicId: string) => apiRequest<AdminUserReviews>(`/admin/users/${encodeURIComponent(publicId)}/reviews`),
+    trades: (filters: AdminTradeListQuery, cursor?: string) =>
+      apiRequest<Paginated<AdminTradeListItem>>(`/admin/trades${query({ ...filters, cursor, limit: 20 })}`),
+    trade: (id: string) => apiRequest<AdminTradeDetail>(`/admin/trades/${id}`),
+    // Changes: every one is written to the audit log (with the optional reason).
+    updateUser: (publicId: string, body: AdminUpdateUserRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}`, { method: 'PATCH', body }),
+    updateVendor: (publicId: string, body: AdminUpdateVendorRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/vendor`, { method: 'PATCH', body }),
+    /** newest first */
+    userHistory: (publicId: string) => apiRequest<AdminAuditEntry[]>(`/admin/users/${encodeURIComponent(publicId)}/history`),
+    cards: (filters: AdminCardListQuery, cursor?: string) =>
+      apiRequest<Paginated<AdminCardListItem>>(`/admin/cards${query({ ...filters, cursor, limit: 20 })}`),
+    card: (id: string) => apiRequest<AdminCardDetail>(`/admin/cards/${id}`),
+    updateCard: (id: string, body: AdminUpdateCardRequest) =>
+      apiRequest<AdminCardDetail>(`/admin/cards/${id}`, { method: 'PATCH', body }),
+    analytics: () => apiRequest<AdminAnalytics>('/admin/analytics'),
+    /** SUPER_ADMIN only */
+    changeRole: (publicId: string, body: AdminChangeRoleRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/role`, { method: 'PATCH', body }),
+    resetPassword: (publicId: string, body: AdminResetPasswordRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/reset-password`, { method: 'POST', body }),
+    block: (publicId: string, body: AdminBlockRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/block`, { method: 'POST', body }),
+    unblock: (publicId: string, body: AdminBlockRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/unblock`, { method: 'POST', body }),
+    /** SUPER_ADMIN only */
+    createAdmin: (body: AdminCreateAdminRequest) => apiRequest<AdminUserDetail>('/admin/admins', { method: 'POST', body }),
+    /** SUPER_ADMIN only */
+    audit: (filters: AdminAuditQuery, cursor?: string) =>
+      apiRequest<Paginated<AdminAuditEntry>>(`/admin/audit${query({ ...filters, cursor, limit: 30 })}`),
+    /** SUPER_ADMIN only */
+    broadcast: (body: AdminBroadcastRequest) =>
+      apiRequest<AdminBroadcastResponse>('/admin/notifications/broadcast', { method: 'POST', body }),
   },
 };

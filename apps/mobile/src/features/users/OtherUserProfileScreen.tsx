@@ -26,7 +26,7 @@ export function OtherUserProfileScreen({ route, navigation }: RootScreenProps<'O
   const profile = useQuery({ queryKey: queryKeys.user(publicId), queryFn: () => api.users.publicProfile(publicId) });
   const reviews = useQuery({ queryKey: queryKeys.userReviews(publicId), queryFn: () => api.users.reviews(publicId) });
   const vendorEvents = useQuery({
-    queryKey: queryKeys.eventList({ vendor: publicId }),
+    queryKey: queryKeys.eventListFirstPage({ vendor: publicId }),
     queryFn: () => api.events.list({ vendor: publicId }),
     enabled: profile.data?.vendor != null,
   });

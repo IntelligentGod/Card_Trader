@@ -6,6 +6,7 @@ import { ApiError } from '../api/client';
 import { api } from '../api/endpoints';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import type { RootScreenProps } from '../navigation/types';
+import { useAuthNotice } from '../stores/authNotice';
 import { useSession } from '../stores/session';
 
 jest.mock('../api/endpoints', () => ({ api: { auth: { login: jest.fn() } } }));
@@ -26,6 +27,8 @@ describe('LoginScreen', () => {
   beforeEach(() => {
     login.mockReset();
     useSession.getState().setSignedOut();
+    useAuthNotice.getState().setNotice(null);
+    (props.navigation.navigate as jest.Mock).mockClear();
   });
 
   it('validates before calling the API', () => {
@@ -40,6 +43,7 @@ describe('LoginScreen', () => {
       user: {
         publicId: 'AbCdEfGhIjKl',
         email: 'tom@example.com',
+        role: 'USER',
         username: 'tom',
         displayName: 'Tom',
         bio: null,
@@ -48,6 +52,11 @@ describe('LoginScreen', () => {
         socialLinks: {},
         vendor: null,
         stats: { ratingAverage: null, ratingCount: 0, completedTradeCount: 0 },
+        emailVerified: true,
+        twoFactorEnabled: false,
+        mustChangePassword: false,
+        hasPassword: true,
+        authProviders: ['PASSWORD'],
         createdAt: '2026-09-30T00:00:00Z',
       },
       tokens: { accessToken: 'access', refreshToken: 'refresh-token-value', accessTokenExpiresIn: 900 },
@@ -69,5 +78,28 @@ describe('LoginScreen', () => {
     fireEvent.changeText(screen.getByTestId('login-password'), 'wrong');
     fireEvent.press(screen.getByTestId('login-submit'));
     expect(await screen.findByTestId('login-error')).toHaveTextContent('Invalid email or password');
+  });
+
+  it('asks for the 2FA code instead of signing in when challenged', async () => {
+    login.mockResolvedValue({ twoFactorRequired: true, challengeToken: 'challenge', expiresIn: 300 });
+    renderScreen(<LoginScreen {...props} />);
+    fireEvent.changeText(screen.getByTestId('login-email'), 'tom@example.com');
+    fireEvent.changeText(screen.getByTestId('login-password'), 'Tr4ding-Cards-Rock');
+    fireEvent.press(screen.getByTestId('login-submit'));
+
+    await waitFor(() => expect(props.navigation.navigate).toHaveBeenCalledWith('TwoFactorVerify', { challengeToken: 'challenge', expiresIn: 300 }));
+    expect(useSession.getState().status).toBe('signedOut');
+  });
+
+  it('explains why the last session ended', () => {
+    useAuthNotice.getState().setNotice('Your account has been blocked. Please contact support.');
+    renderScreen(<LoginScreen {...props} />);
+    expect(screen.getByTestId('login-notice')).toHaveTextContent(/Your account has been blocked\. Please contact support\./);
+  });
+
+  it('hides Google sign-in when no client ID is configured', () => {
+    expect(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID).toBeUndefined();
+    renderScreen(<LoginScreen {...props} />);
+    expect(screen.queryByTestId('google-sign-in')).toBeNull();
   });
 });

@@ -26,4 +26,5 @@ export const Errors = {
     new AppException(HttpStatus.UNAUTHORIZED, code, message),
   unprocessable: (code: string, message: string, details?: unknown) =>
     new AppException(HttpStatus.UNPROCESSABLE_ENTITY, code, message, details),
+  tooManyRequests: (code: string, message: string) => new AppException(HttpStatus.TOO_MANY_REQUESTS, code, message),
 };

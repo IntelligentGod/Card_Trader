@@ -1,116 +1,102 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import type { NotificationResponse, NotificationType } from '@card-trader/shared';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import type { NotificationResponse } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
+import { Button } from '../../components/Button';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
-import type { RootScreenProps } from '../../navigation/types';
-import { colors, radius, spacing } from '../../theme';
-import { formatRelative } from '../../utils/format';
-import { notificationTarget, useMarkNotificationsRead, useNotifications } from './hooks';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootScreenProps, RootStackParamList } from '../../navigation/types';
+import { colors, spacing } from '../../theme';
+import {
+  notificationTarget,
+  RECENT_NOTIFICATIONS,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useRecentNotifications,
+  useUnreadCount,
+} from './hooks';
+import { NotificationRow } from './NotificationRow';
 
-const ICONS: Record<NotificationType, keyof typeof Ionicons.glyphMap> = {
-  TRADE_OFFER: 'swap-horizontal',
-  TRADE_COUNTER: 'git-compare',
-  TRADE_ACCEPTED: 'checkmark-circle',
-  TRADE_DECLINED: 'close-circle',
-  TRADE_CANCELLED: 'close-circle-outline',
-  TRADE_TERMS_CHANGED: 'create',
-  TRADE_COMPLETED: 'trophy',
-  REVIEW_RECEIVED: 'star',
-  VENDOR_APPLICATION: 'storefront',
-  VENDOR_APPROVED: 'storefront',
-  VENDOR_DECLINED: 'storefront-outline',
-  EVENT_UPDATED: 'calendar',
-  EVENT_CANCELLED: 'calendar-clear',
-  EVENT_REMINDER: 'alarm',
-};
+type Navigation = Pick<NativeStackNavigationProp<RootStackParamList>, 'navigate' | 'setOptions'>;
 
-export function NotificationsScreen({ navigation }: RootScreenProps<'Notifications'>) {
-  const list = useNotifications();
-  const markRead = useMarkNotificationsRead();
-  const items = list.data?.pages.flatMap((p) => p.data) ?? [];
-  const hasUnread = items.some((n) => n.readAt === null);
+/** Opening a notification marks it read, then goes to what it's about (if anything). */
+export function useOpenNotification(navigation: Navigation) {
+  const markRead = useMarkNotificationRead();
+  return (notification: NotificationResponse) => {
+    if (!notification.isRead) markRead.mutate(notification.id);
+    const target = notificationTarget(notification.type, notification.data);
+    if (target) navigation.navigate(...target);
+  };
+}
 
+/** "Mark all as read" in the header while anything is unread. */
+export function useMarkAllHeader(navigation: Navigation) {
+  const unread = useUnreadCount().data?.count ?? 0;
+  const markAll = useMarkAllNotificationsRead();
+  const { mutate, isPending } = markAll;
   useEffect(() => {
     navigation.setOptions({
       headerRight: () =>
-        hasUnread ? (
-          <Pressable onPress={() => markRead.mutate(undefined)} hitSlop={8}>
+        unread > 0 ? (
+          <Pressable onPress={() => mutate()} disabled={isPending} hitSlop={8} accessibilityRole="button" testID="mark-all-read">
             <AppText variant="bodyStrong" color={colors.primary}>
-              Mark all read
+              Mark all as read
             </AppText>
           </Pressable>
         ) : null,
     });
-  }, [navigation, hasUnread, markRead]);
+  }, [navigation, unread, mutate, isPending]);
+}
 
-  const open = (notification: NotificationResponse) => {
-    if (notification.readAt === null) markRead.mutate([notification.id]);
-    const target = notificationTarget(notification.type, notification.data);
-    if (target) navigation.navigate(...target);
-  };
+/** The latest few notifications; the full list is one tap away. */
+export function NotificationsScreen({ navigation }: RootScreenProps<'Notifications'>) {
+  const recent = useRecentNotifications();
+  const open = useOpenNotification(navigation);
+  useMarkAllHeader(navigation);
 
-  if (list.isPending) return <SkeletonList rows={6} />;
-  if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />;
+  if (recent.isPending) return <SkeletonList rows={RECENT_NOTIFICATIONS} />;
+  if (recent.error) return <ErrorState error={recent.error} onRetry={() => void recent.refetch()} />;
+
+  const items = recent.data.data.slice(0, RECENT_NOTIFICATIONS);
+  const hasMore = recent.data.nextCursor !== null;
 
   return (
     <FlatList
       data={items}
       keyExtractor={(n) => n.id}
       contentContainerStyle={styles.list}
-      ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
-      onEndReached={() => {
-        if (list.hasNextPage && !list.isFetchingNextPage) void list.fetchNextPage();
-      }}
-      refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} tintColor={colors.primary} />}
-      ListFooterComponent={list.isFetchingNextPage ? <ActivityIndicator style={{ margin: spacing.lg }} /> : null}
+      ItemSeparatorComponent={Separator}
+      refreshControl={<RefreshControl refreshing={recent.isRefetching} onRefresh={() => void recent.refetch()} tintColor={colors.primary} />}
       ListEmptyComponent={
         <EmptyState
           icon="notifications-outline"
           title="You're all caught up"
-          message="Trade offers, reviews, vendor decisions and show updates will appear here."
+          message="Trade offers, reviews, vendor decisions, show updates and account notices will appear here."
         />
       }
-      renderItem={({ item }) => {
-        const unread = item.readAt === null;
-        return (
-          <Pressable
-            onPress={() => open(item)}
-            style={({ pressed }) => [styles.row, unread && styles.unread, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityState={{ selected: unread }}
-          >
-            <View style={[styles.icon, unread && styles.iconUnread]}>
-              <Ionicons name={ICONS[item.type]} size={20} color={unread ? colors.white : colors.primary} />
-            </View>
-            <View style={styles.body}>
-              <View style={styles.titleRow}>
-                <AppText variant="bodyStrong" numberOfLines={1} style={styles.flex}>
-                  {item.title}
-                </AppText>
-                <AppText variant="caption" color={colors.textSubtle}>
-                  {formatRelative(item.createdAt)}
-                </AppText>
-              </View>
-              <AppText color={colors.textMuted}>{item.body}</AppText>
-            </View>
-          </Pressable>
-        );
-      }}
+      ListFooterComponent={
+        hasMore ? (
+          <Button
+            title="Show all"
+            variant="secondary"
+            icon="time-outline"
+            testID="notifications-show-all"
+            style={styles.showAll}
+            onPress={() => navigation.navigate('NotificationHistory')}
+          />
+        ) : null
+      }
+      renderItem={({ item }) => <NotificationRow notification={item} onPress={() => open(item)} />}
     />
   );
 }
 
+export function Separator() {
+  return <View style={{ height: spacing.sm }} />;
+}
+
 const styles = StyleSheet.create({
   list: { padding: spacing.lg, flexGrow: 1 },
-  row: { flexDirection: 'row', gap: spacing.md, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.surface },
-  unread: { borderLeftWidth: 3, borderLeftColor: colors.primary },
-  pressed: { opacity: 0.85 },
-  icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  iconUnread: { backgroundColor: colors.primary },
-  body: { flex: 1, gap: 2 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  flex: { flex: 1 },
+  showAll: { marginTop: spacing.lg },
 });

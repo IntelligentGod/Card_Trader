@@ -23,6 +23,11 @@ export function configureApp(app: NestExpressApplication): void {
     }),
   );
   app.useBodyParser('json', { limit: '100kb' });
+  // The mobile app needs no CORS; browsers (the admin website) only from listed origins.
+  // Tokens travel in the Authorization header, never cookies, so credentials stay off.
+  if (config.corsOrigins.length > 0) {
+    app.enableCors({ origin: config.corsOrigins, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], maxAge: 600 });
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -9,7 +9,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.cardtrader.app"
+      "bundleIdentifier": "com.cardtrader.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.cardtrader.app",
@@ -34,10 +35,11 @@
         "expo-image-picker",
         {
           "photosPermission": "Card Trader lets you choose photos of your cards and a profile picture.",
-          "cameraPermission": false,
+          "cameraPermission": "Card Trader uses the camera to scan other collectors' QR codes.",
           "microphonePermission": false
         }
       ],
+      "expo-notifications",
       "expo-secure-store",
       [
         "expo-build-properties",
@@ -46,7 +48,9 @@
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin",
+      "expo-apple-authentication"
     ]
   }
 }

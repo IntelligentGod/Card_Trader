@@ -4,7 +4,7 @@ import { normalizeUsername, validateLogin, validateRegister } from '../features/
 import { validateItemForm } from '../features/collection/components/CollectionItemForm';
 import { toIsoInstant, validateEventForm } from '../features/events/screens/EventEditScreen';
 import { toSearchQuery } from '../features/events/screens/EventSearchScreen';
-import { notificationTarget } from '../features/notifications/hooks';
+import { newSince, notificationTarget } from '../features/notifications/hooks';
 import { cleanSocialLinks, socialLinkErrors } from '../features/profile/SocialLinksFields';
 import { interpretScan } from '../features/qr/scan';
 import { socialUrl } from '../components/Social';
@@ -162,5 +162,16 @@ describe('notification routing', () => {
     expect(notificationTarget('VENDOR_APPLICATION', { eventId: 'e1' })).toEqual(['EventVendors', { eventId: 'e1' }]);
     expect(notificationTarget('EVENT_REMINDER', { eventId: 'e1' })).toEqual(['EventDetails', { eventId: 'e1' }]);
     expect(notificationTarget('EVENT_UPDATED', {})).toBeNull();
+  });
+});
+
+describe('phone alerts', () => {
+  const n = (id: string, createdAt: string, readAt: string | null = null) =>
+    ({ id, type: 'TRADE_COUNTER', title: id, body: '', data: {}, isRead: readAt !== null, readAt, createdAt }) as const;
+
+  it('rings only for unread notifications newer than the last one seen, oldest first', () => {
+    const page = [n('c', '2026-10-01T10:03:00.000Z'), n('b', '2026-10-01T10:02:00.000Z', '2026-10-01T10:02:30.000Z'), n('a', '2026-10-01T10:01:00.000Z'), n('old', '2026-10-01T09:00:00.000Z')];
+    expect(newSince(page, '2026-10-01T10:00:00.000Z').map((x) => x.id)).toEqual(['a', 'c']);
+    expect(newSince(page, '2026-10-01T10:03:00.000Z')).toEqual([]);
   });
 });

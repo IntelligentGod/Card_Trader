@@ -17,6 +17,21 @@ export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
   Register: undefined;
+  /** second sign-in step for accounts with 2FA (no session yet) */
+  TwoFactorVerify: { challengeToken: string; expiresIn: number };
+  /** shown once right after sign-up */
+  VerifyEmail: undefined;
+  /** forced (admin reset) when user.mustChangePassword, otherwise from Security */
+  ChangePassword: undefined;
+  Security: undefined;
+  EnableTwoFactor: undefined;
+  /** shown once; leaving needs "I saved these codes" */
+  RecoveryCodes: { codes: string[] };
+  /** code or recovery code before turning 2FA off / replacing recovery codes */
+  TwoFactorProof: { purpose: 'disable' | 'regenerate' };
+  NotificationHistory: undefined;
+  HelpCenter: undefined;
+  HelpArticle: { articleId: string };
   Main: NavigatorScreenParams<MainTabParamList>;
   AddCard: undefined;
   SubmitCard: undefined;
@@ -46,6 +61,22 @@ export type RootStackParamList = {
   ReviewUser: { tradeId: string; displayName: string };
   EditProfile: undefined;
   Settings: undefined;
+  /** read-only admin console (role ADMIN only) */
+  AdminHome: undefined;
+  AdminUser: { publicId: string };
+  AdminTrades: undefined;
+  AdminTrade: { tradeId: string };
+  AdminEditUser: { publicId: string };
+  AdminCards: undefined;
+  AdminCard: { cardId: string };
+  AdminEditCard: { cardId: string };
+  AdminAnalytics: undefined;
+  AdminResetPassword: { publicId: string };
+  /** SUPER_ADMIN only */
+  AdminAdmins: undefined;
+  AdminCreateAdmin: undefined;
+  AdminAuditLog: undefined;
+  AdminBroadcast: undefined;
 };
 
 export type RootScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>;

@@ -18,10 +18,10 @@ export function qrPath(value: string): { path: string; size: number } {
   return { path, size: size + QUIET_ZONE * 2 };
 }
 
-export function QRCodeView({ value, size = 240 }: { value: string; size?: number }) {
+export function QRCodeView({ value, size = 240, label = 'Your trade QR code' }: { value: string; size?: number; label?: string }) {
   const { path, size: modules } = useMemo(() => qrPath(value), [value]);
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${modules} ${modules}`} accessibilityLabel="Your trade QR code">
+    <Svg width={size} height={size} viewBox={`0 0 ${modules} ${modules}`} accessibilityLabel={label}>
       <Rect x={0} y={0} width={modules} height={modules} fill={colors.white} />
       <Path d={path} fill={colors.text} />
     </Svg>

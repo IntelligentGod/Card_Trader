@@ -3,13 +3,16 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
+import { RolesGuard } from './common/auth/roles.guard';
 import { AppConfig } from './config/app-config.service';
 import { AppConfigModule } from './config/config.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CardsModule } from './modules/cards/cards.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EventsModule } from './modules/events/events.module';
 import { HealthController } from './modules/health/health.controller';
+import { MailModule } from './modules/mail/mail.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { PricingModule } from './modules/pricing/pricing.module';
@@ -40,6 +43,7 @@ import { PrismaModule } from './prisma/prisma.module';
         skipIf: () => config.get('NODE_ENV') === 'test',
       }),
     }),
+    MailModule,
     UploadsModule,
     UsersModule,
     AuthModule,
@@ -51,11 +55,14 @@ import { PrismaModule } from './prisma/prisma.module';
     ReviewsModule,
     NotificationsModule,
     EventsModule,
+    AdminModule,
   ],
   controllers: [HealthController],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // Order matters: authenticate first, then check the role.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

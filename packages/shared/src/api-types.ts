@@ -3,7 +3,9 @@
  * Dates are ISO-8601 strings; plain dates are YYYY-MM-DD. Money is integer cents.
  */
 import type {
+  AuthProviderType,
   CardCategory,
+  CatalogSource,
   CardCondition,
   EventStatus,
   GradingCompany,
@@ -11,6 +13,8 @@ import type {
   NotificationType,
   TradeRole,
   TradeStatus,
+  UserRole,
+  UserStatus,
   ValueConfidence,
   VendorApplicationStatus,
 } from './enums';
@@ -59,6 +63,76 @@ export interface AuthResponse {
   tokens: AuthTokens;
 }
 
+/**
+ * The password (or Google/Apple) was right but the account has 2FA: no session
+ * exists yet. Send the 6-digit code or a recovery code to POST /auth/2fa/verify.
+ */
+export interface TwoFactorChallengeResponse {
+  twoFactorRequired: true;
+  challengeToken: string;
+  /** seconds the challenge stays valid */
+  expiresIn: number;
+}
+
+/** Every sign-in endpoint (password, Google, Apple) answers with one of these. */
+export type LoginResponse = AuthResponse | TwoFactorChallengeResponse;
+
+export const isTwoFactorChallenge = (response: LoginResponse): response is TwoFactorChallengeResponse =>
+  'twoFactorRequired' in response && response.twoFactorRequired === true;
+
+/** Google Sign-In ID token (its `aud` must be one of GOOGLE_CLIENT_IDS). */
+export interface GoogleSignInRequest {
+  idToken: string;
+}
+
+/** Sign in with Apple identity token. `nonce` is the raw nonce whose SHA-256 was sent to Apple. */
+export interface AppleSignInRequest {
+  identityToken: string;
+  nonce: string;
+  /** Apple sends the name only on the very first sign-in, to the app */
+  fullName?: { givenName?: string | null; familyName?: string | null } | null;
+}
+
+export interface TwoFactorVerifyRequest {
+  challengeToken: string;
+  /** 6-digit authenticator code, or */
+  code?: string;
+  /** one of the recovery codes shown at setup */
+  recoveryCode?: string;
+}
+
+export interface TwoFactorSetupResponse {
+  /** base32, for typing into the authenticator by hand */
+  secret: string;
+  /** otpauth:// URI to show as a QR code */
+  otpauthUrl: string;
+}
+
+export interface TwoFactorCodeRequest {
+  code: string;
+}
+
+/** Disabling or regenerating needs proof: an authenticator code or an unused recovery code. */
+export interface TwoFactorProofRequest {
+  code?: string;
+  recoveryCode?: string;
+}
+
+export interface RecoveryCodesResponse {
+  /** shown once; store them somewhere safe */
+  recoveryCodes: string[];
+}
+
+export interface ChangePasswordRequest {
+  /** required unless an admin reset the password or the account has none yet */
+  currentPassword?: string;
+  newPassword: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
 // ───────────── Users ─────────────
 export const SOCIAL_LINK_KEYS = ['instagram', 'x', 'tiktok', 'youtube', 'facebook', 'website'] as const;
 export type SocialLinkKey = (typeof SOCIAL_LINK_KEYS)[number];
@@ -105,6 +179,8 @@ export interface ProfileStats {
 export interface MeResponse {
   publicId: string;
   email: string;
+  /** ADMIN or SUPER_ADMIN unlocks the admin console */
+  role: UserRole;
   username: string;
   displayName: string;
   bio: string | null;
@@ -114,6 +190,14 @@ export interface MeResponse {
   /** null until Vendor Mode was set up once; check isActive */
   vendor: VendorProfileResponse | null;
   stats: ProfileStats;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
+  /** an admin reset the password: only changing it is allowed until then */
+  mustChangePassword: boolean;
+  /** false for Google/Apple-only accounts */
+  hasPassword: boolean;
+  /** sign-in methods linked to the account */
+  authProviders: AuthProviderType[];
   createdAt: string;
 }
 
@@ -616,7 +700,9 @@ export interface NotificationResponse {
   type: NotificationType;
   title: string;
   body: string;
+  /** navigation target; the "metadata" of the notification */
   data: NotificationData;
+  isRead: boolean;
   readAt: string | null;
   createdAt: string;
 }
@@ -631,3 +717,329 @@ export interface MarkNotificationsReadRequest {
 }
 
 export const MARKET_VALUE_DISCLAIMER = 'Market values are estimates based on recent comparable sales.';
+
+// ───────────── Admin (read-only console) ─────────────
+export interface AdminOverview {
+  users: { total: number; active: number; blocked: number; admins: number; vendors: number; newLast7Days: number };
+  collection: { items: number; cards: number; totalValueCents: number };
+  trades: { total: number; byStatus: Record<TradeStatus, number> };
+  events: { total: number; published: number; upcoming: number };
+  reviews: { total: number; averageRating: number | null };
+}
+
+export interface AdminUserListQuery {
+  /** email, username or display name (case-insensitive, partial) */
+  q?: string;
+  role?: UserRole;
+  status?: UserStatus;
+}
+
+export interface AdminUserListItem {
+  publicId: string;
+  email: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  role: UserRole;
+  status: UserStatus;
+  /** set once Vendor Mode was configured, even if it is switched off now */
+  vendor: { businessName: string; isActive: boolean } | null;
+  collectionCount: number;
+  tradeCount: number;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+export type AdminEventRelation = 'ORGANIZER' | 'VENDOR' | 'SAVED';
+
+export interface AdminUserEvent {
+  id: string;
+  title: string;
+  status: EventStatus;
+  startsAt: string;
+  relation: AdminEventRelation;
+  /** for VENDOR */
+  vendorStatus: VendorApplicationStatus | null;
+  tableNumber: string | null;
+}
+
+export interface AdminUserDetail {
+  publicId: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  username: string;
+  displayName: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  location: string | null;
+  socialLinks: SocialLinks;
+  vendor: VendorProfileResponse | null;
+  stats: ProfileStats;
+  counts: {
+    collectionItems: number;
+    /** sum of quantities */
+    cards: number;
+    trades: number;
+    activeTrades: number;
+    reviewsReceived: number;
+    reviewsWritten: number;
+  };
+  collectionValueCents: number;
+  events: AdminUserEvent[];
+  /** latest sign-in or token refresh */
+  lastActiveAt: string | null;
+  lastLoginAt: string | null;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
+  mustChangePassword: boolean;
+  hasPassword: boolean;
+  authProviders: AuthProviderType[];
+  blockedAt: string | null;
+  blockReason: string | null;
+  /** what the signed-in admin may do to this account (the API enforces the same rules) */
+  permissions: AdminUserPermissions;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminUserPermissions {
+  editProfile: boolean;
+  changeRole: boolean;
+  resetPassword: boolean;
+  block: boolean;
+}
+
+export interface AdminTradeListQuery {
+  status?: TradeStatus;
+}
+
+export interface AdminTradeListItem {
+  id: string;
+  status: TradeStatus;
+  initiator: PublicUserLite;
+  counterparty: PublicUserLite;
+  initiatorItemsTotalCents: number;
+  counterpartyItemsTotalCents: number;
+  itemCount: number;
+  cash: TradeCash;
+  isCounterOffer: boolean;
+  event: { id: string; title: string } | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+}
+
+/** A trade seen by neither side: no viewer role, actions or "my review". */
+export type AdminTradeDetail = Omit<TradeResponse, 'myRole' | 'allowedActions' | 'myReview'> & {
+  reviews: ReviewResponse[];
+};
+
+export interface AdminReview extends ReviewResponse {
+  /** the user who was reviewed */
+  subject: PublicUserLite;
+}
+
+export interface AdminUserReviews {
+  received: AdminReview[];
+  written: AdminReview[];
+}
+
+// ───────────── Admin: changes (every change is written to the audit log) ─────────────
+/** Every field is optional; send only what changes. `reason` is stored in the audit log. */
+export interface AdminUpdateUserRequest {
+  email?: string;
+  username?: string;
+  displayName?: string;
+  bio?: string | null;
+  location?: string | null;
+  socialLinks?: SocialLinks;
+  /** true deletes the profile photo */
+  removeAvatar?: boolean;
+  reason?: string | null;
+}
+
+/** SUPER_ADMIN only. Nobody can be made SUPER_ADMIN through the API. */
+export interface AdminChangeRoleRequest {
+  role: 'USER' | 'ADMIN';
+  reason?: string | null;
+}
+
+/** The new password is hashed at once, never logged or returned; every session of the user ends. */
+export interface AdminResetPasswordRequest {
+  newPassword: string;
+  /** default true: the user must choose their own password at next sign-in */
+  requireChange?: boolean;
+  reason?: string | null;
+}
+
+export interface AdminBlockRequest {
+  reason?: string | null;
+}
+
+/** SUPER_ADMIN only: creates an account with role ADMIN that must change its password. */
+export interface AdminCreateAdminRequest {
+  email: string;
+  username: string;
+  displayName: string;
+  temporaryPassword: string;
+}
+
+/** SUPER_ADMIN only: an ANNOUNCEMENT notification to every active user. */
+export interface AdminBroadcastRequest {
+  title: string;
+  message: string;
+}
+
+export interface AdminBroadcastResponse {
+  recipients: number;
+}
+
+export interface AdminAuditQuery {
+  action?: string;
+  targetType?: AdminTargetType;
+}
+
+/** Edits an existing vendor profile; send only what changes. */
+export interface AdminUpdateVendorRequest {
+  isActive?: boolean;
+  businessName?: string;
+  description?: string | null;
+  website?: string | null;
+  socialLinks?: SocialLinks;
+  /** true deletes the vendor logo */
+  removeLogo?: boolean;
+  reason?: string | null;
+}
+
+export type AdminTargetType = 'USER' | 'CARD' | 'SYSTEM';
+
+export interface AdminAuditEntry {
+  id: string;
+  /**
+   * USER_UPDATED, USER_DISABLED, USER_ENABLED, USER_PASSWORD_RESET, VENDOR_UPDATED,
+   * ADMIN_CREATED, ADMIN_REMOVED, ADMIN_ROLE_CHANGED, ADMIN_DISABLED, ADMIN_ENABLED,
+   * CARD_UPDATED, CARD_VERIFIED, CARD_UNVERIFIED, ANNOUNCEMENT_SENT
+   */
+  action: string;
+  targetType: AdminTargetType;
+  targetId: string;
+  /** field → before/after */
+  changes: Record<string, { from: unknown; to: unknown }>;
+  reason: string | null;
+  /** null fields when a normal admin views an action taken by a super admin */
+  admin: { publicId: string | null; displayName: string; email: string | null };
+  /** the user the action was about, when there is one */
+  target: { publicId: string; displayName: string } | null;
+  /** SUPER_ADMIN viewers only */
+  ipAddress: string | null;
+  createdAt: string;
+}
+
+// ───────────── Admin: card catalog ─────────────
+export interface AdminCardListQuery {
+  /** name, number, subject or set name */
+  q?: string;
+  category?: CardCategory;
+  source?: CatalogSource;
+  /** 'true' or 'false' in the query string */
+  verified?: boolean;
+}
+
+export interface AdminCardListItem {
+  id: string;
+  category: CardCategory;
+  name: string;
+  cardNumber: string;
+  variant: string;
+  subject: string | null;
+  rarity: string | null;
+  imageUrl: string | null;
+  set: CardSetSummary;
+  source: CatalogSource;
+  /** user-submitted cards stay unverified (only the submitter sees them) until approved */
+  isVerified: boolean;
+  submittedBy: PublicUserLite | null;
+  /** collection rows holding this card */
+  collectionItemCount: number;
+  /** highest current market value across conditions/grades */
+  topValueCents: number | null;
+  createdAt: string;
+}
+
+export interface AdminCardMarketValue {
+  tierKey: string;
+  tierLabel: string;
+  valueCents: number | null;
+  confidence: ValueConfidence;
+  sampleSize: number;
+  lastSaleAt: string | null;
+  computedAt: string | null;
+}
+
+export interface AdminCardDetail extends AdminCardListItem {
+  externalRef: string | null;
+  /** distinct users with the card in their collection */
+  ownerCount: number;
+  /** sum of quantities across all collections */
+  copies: number;
+  tradeItemCount: number;
+  marketValues: AdminCardMarketValue[];
+  history: AdminAuditEntry[];
+  updatedAt: string;
+}
+
+export interface AdminUpdateCardRequest {
+  name?: string;
+  cardNumber?: string;
+  variant?: string;
+  subject?: string | null;
+  rarity?: string | null;
+  imageUrl?: string | null;
+  isVerified?: boolean;
+  reason?: string | null;
+}
+
+// ───────────── Admin: analytics ─────────────
+export interface AdminMonthCount {
+  /** YYYY-MM (UTC) */
+  month: string;
+  count: number;
+}
+
+export interface AdminAnalytics {
+  users: {
+    byStatus: Record<UserStatus, number>;
+    /** SUPER_ADMIN appears only for super-admin viewers */
+    byRole: Partial<Record<UserRole, number>>;
+    vendors: number;
+    /** last 12 months, oldest first, months with no signups included as 0 */
+    signupsByMonth: AdminMonthCount[];
+  };
+  collection: {
+    byCategory: { category: CardCategory; items: number; cards: number; valueCents: number }[];
+    byListingStatus: Record<ListingStatus, number>;
+    rawItems: number;
+    gradedItems: number;
+    /** graded items per grading company */
+    byGrader: Record<GradingCompany, number>;
+  };
+  catalog: {
+    total: number;
+    verified: number;
+    unverified: number;
+    byCategory: Record<CardCategory, number>;
+    bySource: Record<CatalogSource, number>;
+  };
+  trades: {
+    byStatus: Record<TradeStatus, number>;
+    /** last 12 months, oldest first; value = both sides' card totals */
+    completedByMonth: (AdminMonthCount & { valueCents: number })[];
+    averageCompletedValueCents: number | null;
+  };
+  /** cards with the highest total value across all collections */
+  topCards: { cardId: string; name: string; setName: string; category: CardCategory; copies: number; valueCents: number }[];
+  generatedAt: string;
+}

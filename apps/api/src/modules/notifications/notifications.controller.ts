@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { ArrayMaxSize, IsArray, IsOptional, IsUUID } from 'class-validator';
 import type {
@@ -27,6 +27,7 @@ class MarkReadDto implements MarkNotificationsReadRequest {
 export class NotificationsController {
   constructor(private readonly notifications: NotificationsService) {}
 
+  /** Newest first. `?limit=6` for the recent list; `nextCursor` pages through the full history. */
   @Get()
   list(@CurrentUser() user: AuthUser, @Query() query: CursorQueryDto): Promise<Paginated<NotificationResponse>> {
     return this.notifications.list(user.userId, query);
@@ -38,6 +39,17 @@ export class NotificationsController {
     return this.notifications.unreadCount(user.userId);
   }
 
+  @Patch('read-all')
+  markAllRead(@CurrentUser() user: AuthUser): Promise<UnreadCountResponse> {
+    return this.notifications.markRead(user.userId, undefined);
+  }
+
+  @Patch(':id/read')
+  markOneRead(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<UnreadCountResponse> {
+    return this.notifications.markOneRead(user.userId, id);
+  }
+
+  /** Kept for older app builds; new clients use PATCH :id/read and PATCH read-all. */
   @Post('read')
   @HttpCode(200)
   markRead(@CurrentUser() user: AuthUser, @Body() dto: MarkReadDto): Promise<UnreadCountResponse> {

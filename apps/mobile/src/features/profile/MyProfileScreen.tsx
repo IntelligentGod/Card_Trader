@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { isAdminRole } from '@card-trader/shared';
 import { errorMessage } from '../../api/client';
 import { api } from '../../api/endpoints';
 import { queryKeys } from '../../api/queryKeys';
@@ -117,6 +118,15 @@ export function MyProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
         <Button title="My QR code" icon="qr-code-outline" variant="secondary" onPress={() => navigation.navigate('MyQrCode')} />
         <Button title="Trade history" icon="time-outline" variant="secondary" onPress={() => navigation.navigate('TradeHistory')} />
         <Button title="Settings" icon="settings-outline" variant="secondary" onPress={() => navigation.navigate('Settings')} />
+        {isAdminRole(user.role) ? (
+          <Button
+            title="Admin console"
+            icon="shield-checkmark-outline"
+            variant="secondary"
+            testID="admin-console"
+            onPress={() => navigation.navigate('AdminHome')}
+          />
+        ) : null}
       </View>
 
       <View>

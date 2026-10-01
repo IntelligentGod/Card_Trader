@@ -11,3 +11,10 @@ process.env.PUBLIC_BASE_URL = 'http://localhost:3000';
 process.env.STORAGE_LOCAL_DIR = join(tmpdir(), 'card-trader-test-uploads');
 process.env.SWAGGER_ENABLED = 'false';
 process.env.PRICING_PROVIDERS = 'MOCK';
+process.env.TWO_FACTOR_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString('base64');
+process.env.GOOGLE_CLIENT_IDS = 'test-google-client.apps.googleusercontent.com';
+process.env.APPLE_CLIENT_IDS = 'com.cardtrader.app';
+// Empty (not deleted) so apps/api/.env cannot fill them in: no SMTP (MailService keeps an outbox), no bootstrap.
+process.env.SMTP_HOST = '';
+process.env.SUPER_ADMIN_EMAIL = '';
+process.env.SUPER_ADMIN_INITIAL_PASSWORD = '';

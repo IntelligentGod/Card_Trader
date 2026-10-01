@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Profile, User, VendorProfile } from '@prisma/client';
+import type { AuthProviderType, Profile, User, VendorProfile } from '@prisma/client';
 import type {
   MeResponse,
   ProfileStats,
@@ -12,11 +12,19 @@ import { readSocialLinks } from '../../common/validation/social-links';
 import { StorageService } from '../uploads/storage.service';
 
 /** Relations every user-facing query loads. */
-export const userProfileInclude = { profile: true, vendorProfile: true } as const;
+export const userProfileInclude = {
+  profile: true,
+  vendorProfile: true,
+  authProviders: { select: { provider: true } },
+} as const;
 /** Select for embedding another user (trade partner, reviewer, vendor). */
 export const publicUserSelect = { publicId: true, profile: true, vendorProfile: true } as const;
 
-export type UserWithProfile = User & { profile: Profile | null; vendorProfile: VendorProfile | null };
+export type UserWithProfile = User & {
+  profile: Profile | null;
+  vendorProfile: VendorProfile | null;
+  authProviders: { provider: AuthProviderType }[];
+};
 export type PublicUserSource = { publicId: string; profile: Profile | null; vendorProfile: VendorProfile | null };
 
 /**
@@ -40,6 +48,7 @@ export class UserMapper {
     return {
       publicId: user.publicId,
       email: user.email,
+      role: user.role,
       username: user.profile?.username ?? '',
       displayName: user.profile?.displayName ?? 'Collector',
       bio: user.profile?.bio ?? null,
@@ -48,6 +57,11 @@ export class UserMapper {
       socialLinks: readSocialLinks(user.profile?.socialLinks),
       vendor: user.vendorProfile ? this.toVendor(user.vendorProfile) : null,
       stats: this.stats(user.profile),
+      emailVerified: user.emailVerifiedAt !== null,
+      twoFactorEnabled: user.twoFactorEnabled,
+      mustChangePassword: user.mustChangePassword,
+      hasPassword: user.passwordHash !== null,
+      authProviders: user.authProviders.map((p) => p.provider),
       createdAt: user.createdAt.toISOString(),
     };
   }

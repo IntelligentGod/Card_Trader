@@ -4,6 +4,8 @@ import * as Shared from '@card-trader/shared';
 /** The shared package mirrors Prisma enums by hand; this keeps them in lockstep. */
 describe('shared enums match Prisma enums', () => {
   const pairs: Array<[string, Record<string, string>, Record<string, string>]> = [
+    ['UserStatus', Prisma.UserStatus, Shared.UserStatus],
+    ['UserRole', Prisma.UserRole, Shared.UserRole],
     ['CardCategory', Prisma.CardCategory, Shared.CardCategory],
     ['CardCondition', Prisma.CardCondition, Shared.CardCondition],
     ['GradingCompany', Prisma.GradingCompany, Shared.GradingCompany],

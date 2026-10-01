@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { MARKET_VALUE_DISCLAIMER, VALUE_RANGE_LABELS, VALUE_RANGES } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
@@ -6,12 +7,13 @@ import { Segmented } from '../../components/Controls';
 import { Screen } from '../../components/Screen';
 import { Surface } from '../../components/Surface';
 import { API_URL, APP_VERSION } from '../../config';
+import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
 import { useUiPrefs } from '../../stores/uiPrefs';
 import { colors, spacing } from '../../theme';
 import { signOut } from '../auth/sessionActions';
 
-export function SettingsScreen() {
+export function SettingsScreen({ navigation }: RootScreenProps<'Settings'>) {
   const user = useSession((s) => s.user);
   const offline = useSession((s) => s.offline);
   const range = useUiPrefs((s) => s.chartRange);
@@ -25,6 +27,14 @@ export function SettingsScreen() {
         </AppText>
         <Row label="Email" value={user?.email ?? ''} />
         <Row label="Public code" value={user?.publicId ?? ''} />
+        <LinkRow
+          icon="shield-checkmark-outline"
+          label="Security"
+          detail={user && !user.emailVerified ? 'Verify email' : user?.twoFactorEnabled ? '2FA on' : undefined}
+          testID="settings-security"
+          onPress={() => navigation.navigate('Security')}
+        />
+        <LinkRow icon="help-circle-outline" label="Help Center" onPress={() => navigation.navigate('HelpCenter')} />
       </Surface>
 
       <Surface style={styles.group}>
@@ -58,6 +68,35 @@ export function SettingsScreen() {
   );
 }
 
+function LinkRow({
+  icon,
+  label,
+  detail,
+  onPress,
+  testID,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  detail?: string;
+  onPress: () => void;
+  testID?: string;
+}) {
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]} accessibilityRole="button" testID={testID}>
+      <Ionicons name={icon} size={20} color={colors.primary} />
+      <AppText variant="bodyStrong" style={styles.flex}>
+        {label}
+      </AppText>
+      {detail ? (
+        <AppText variant="caption" color={colors.textMuted}>
+          {detail}
+        </AppText>
+      ) : null}
+      <Ionicons name="chevron-forward" size={18} color={colors.textSubtle} />
+    </Pressable>
+  );
+}
+
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.row}>
@@ -73,4 +112,6 @@ const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.lg },
   value: { flexShrink: 1, textAlign: 'right' },
+  flex: { flex: 1 },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xs },
 });

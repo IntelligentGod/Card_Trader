@@ -98,6 +98,9 @@ async function main(): Promise<void> {
     if (existing) {
       userIdByEmail.set(seedUser.email, existing.id);
       await prisma.profile.update({ where: { userId: existing.id }, data: profileFields });
+      if (seedUser.role && existing.role !== seedUser.role) {
+        await prisma.user.update({ where: { id: existing.id }, data: { role: seedUser.role } });
+      }
       if (vendorFields) {
         await prisma.vendorProfile.upsert({
           where: { userId: existing.id },
@@ -112,11 +115,17 @@ async function main(): Promise<void> {
         email: seedUser.email,
         passwordHash,
         publicId: generatePublicId(),
+        role: seedUser.role ?? 'USER',
+        // Demo addresses can't receive mail; treat them as verified.
+        emailVerifiedAt: new Date(),
         profile: { create: { displayName: seedUser.displayName, bio: seedUser.bio, ...profileFields } },
         ...(vendorFields && { vendorProfile: { create: vendorFields } }),
       },
     });
     userIdByEmail.set(seedUser.email, user.id);
+    await prisma.userAuthProvider.create({
+      data: { userId: user.id, provider: 'PASSWORD', providerUserId: user.id, providerEmail: seedUser.email },
+    });
     for (const item of seedUser.items) {
       const cardId = cardIdByRef.get(item.ref);
       if (!cardId) throw new Error(`Unknown seed card ${item.ref}`);

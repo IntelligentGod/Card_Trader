@@ -6,6 +6,7 @@ import request from 'supertest';
 import type { AuthResponse } from '@card-trader/shared';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/bootstrap';
+import { OIDC_KEY_SOURCES, type OidcKeySources } from '../src/modules/auth/oidc-verifier';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 export const API = '/api/v1';
@@ -16,8 +17,11 @@ export interface TestContext {
   http: () => ReturnType<typeof request>;
 }
 
-export async function createTestApp(): Promise<TestContext> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+/** `oidcKeys` replaces Google's/Apple's published signing keys with test keys. */
+export async function createTestApp(options: { oidcKeys?: OidcKeySources } = {}): Promise<TestContext> {
+  let builder = Test.createTestingModule({ imports: [AppModule] });
+  if (options.oidcKeys) builder = builder.overrideProvider(OIDC_KEY_SOURCES).useValue(options.oidcKeys);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>();
   configureApp(app);
   await app.init();
@@ -60,7 +64,7 @@ export async function registerUser(ctx: TestContext, displayName = 'Collector'):
   };
 }
 
-export function auth(user: TestUser): { Authorization: string } {
+export function auth(user: Pick<TestUser, 'token'>): { Authorization: string } {
   return { Authorization: `Bearer ${user.token}` };
 }
 

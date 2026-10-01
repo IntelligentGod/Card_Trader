@@ -10,6 +10,7 @@ Main navigation: **Discover | Inventory | Trade | Events | Profile**.
 
 * **API** — NestJS + Prisma + PostgreSQL (`apps/api`)
 * **Mobile** — Expo / React Native (`apps/mobile`)
+* **Admin website** — Vite + React, read-only admin console (`apps/admin`)
 * **Shared** — types, enums and domain helpers (`packages/shared`)
 
 Architecture and design decisions: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -44,6 +45,7 @@ Demo accounts (password `CardShow2025!`):
 | `tom@example.com` | Collector — Pokémon, a couple of One Piece and sports cards; "Interested" in the Austin show |
 | `alex@example.com` | Vendor Mode ("Grand Line Cards"), approved at the Austin Card Show, table 14 |
 | `sam@example.com` | Event organizer of the Austin Card Show and the Dallas Collectors Expo |
+| `admin@example.com` | Admin — opens the admin console (mobile Profile tab and the admin website) |
 
 ## Running
 
@@ -58,6 +60,51 @@ dev server automatically (same Wi-Fi). To point elsewhere set
 `EXPO_PUBLIC_API_URL` (see `apps/mobile/.env.example`). Also set
 `PUBLIC_BASE_URL` in `apps/api/.env` to your computer's LAN address so
 uploaded images load on the phone.
+
+## Admin console
+
+Admins can look up every account, collection (including personal cards),
+trade, review and event, and:
+
+* **edit users** — email, username, display name, bio, location, social links,
+  remove a profile photo, and edit vendor details;
+* **block / unblock, reset passwords** — blocking or a password reset locks
+  the account out on its very next request and signs it out on every device;
+  the super admin also changes roles and manages admins, and normal admins
+  never see the super admin. Nobody can change their own role or status;
+* **browse the card catalog** — every card including unverified user
+  submissions, who submitted it, owners, copies and market values; **verify**
+  submissions and correct card details;
+* **see analytics** — pie charts (collection value by category, listing
+  status, trades by status, catalog by category/source, graders) and monthly
+  bar charts (signups, completed trades and their value). A pie only appears
+  when at least 3 parts are non-zero; otherwise the numbers are shown.
+
+Every change is written to an audit log (who, when, why, each field's before
+and after), shown as **History** on the user or card.
+
+* **Mobile:** sign in as an admin → **Profile → Admin console**.
+* **Web:** `npm run admin:dev`, then open http://localhost:5173 and sign in
+  with an admin account. The API must allow the site's origin:
+  `CORS_ORIGINS=http://localhost:5173` in `apps/api/.env` (comma-separated
+  for more). To point the site at another API, set `VITE_API_URL` in
+  `apps/admin/.env` (see `apps/admin/.env.example`).
+
+Sign-in (Google, Apple, email + 2FA), email verification, roles
+(USER / ADMIN / SUPER_ADMIN), blocking, password resets and the audit log are
+described in [docs/AUTH_AND_ADMIN.md](docs/AUTH_AND_ADMIN.md), including the
+super-admin bootstrap and the Google/Apple/SMTP setup.
+
+The super admin manages admins in the app; roles can also be set from the command line:
+
+```bash
+npm run admin:grant -w @card-trader/api -- someone@example.com
+npm run admin:revoke -w @card-trader/api -- someone@example.com
+npm run admin:list -w @card-trader/api
+```
+
+The role is checked against the database on every admin request, so granting
+or revoking takes effect immediately, without signing in again.
 
 ## Android build (APK / Android Studio)
 

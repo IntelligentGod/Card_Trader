@@ -21,4 +21,23 @@ export class AppConfig {
       .map((code) => code.trim().toUpperCase())
       .filter(Boolean);
   }
+
+  get corsOrigins(): string[] {
+    return splitList(this.get('CORS_ORIGINS')).map((origin) => origin.replace(/\/$/, ''));
+  }
+
+  get googleClientIds(): string[] {
+    return splitList(this.get('GOOGLE_CLIENT_IDS'));
+  }
+
+  get appleClientIds(): string[] {
+    return splitList(this.get('APPLE_CLIENT_IDS'));
+  }
+}
+
+function splitList(value: string): string[] {
+  return value
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
 }

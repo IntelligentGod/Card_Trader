@@ -3,6 +3,8 @@ import type { Prisma, Review, TradeItem } from '@prisma/client';
 import {
   MARKET_VALUE_DISCLAIMER,
   tierLabelFromKey,
+  type AdminTradeDetail,
+  type AdminTradeListItem,
   type CompSale,
   type ReviewResponse,
   type TradeItemResponse,
@@ -38,6 +40,13 @@ export const tradeListInclude = {
 } satisfies Prisma.TradeInclude;
 
 export type TradeListRow = Prisma.TradeGetPayload<{ include: typeof tradeListInclude }>;
+
+export const adminTradeListInclude = {
+  ...tradeListInclude,
+  event: { select: { id: true, title: true } },
+} satisfies Prisma.TradeInclude;
+
+export type AdminTradeListRow = Prisma.TradeGetPayload<{ include: typeof adminTradeListInclude }>;
 
 @Injectable()
 export class TradeMapper {
@@ -82,39 +91,16 @@ export class TradeMapper {
   }
 
   toResponse(trade: TradeDetail, viewerId: string): TradeResponse {
-    const initiator = this.requireRole(trade.participants, 'INITIATOR');
-    const counterparty = this.requireRole(trade.participants, 'COUNTERPARTY');
     const me = trade.participants.find((p) => p.userId === viewerId);
     if (!me) throw new Error('Viewer is not a participant');
-
-    const toLines = (p: ParticipantDetail) => p.items.map((i) => ({ unitValueCents: i.unitValueCents, quantity: i.quantity }));
-    const calculation = calculateTrade(toLines(initiator), toLines(counterparty));
-    const cash = effectiveCash(calculation, {
-      isManual: trade.cashIsManual,
-      payer: trade.agreedCashPayer,
-      amountCents: trade.agreedCashCents,
-    });
+    const { initiator, counterparty, ...shared } = this.sharedDetail(trade);
     const myReview = trade.reviews.find((r) => r.reviewerId === viewerId) ?? null;
 
-    const toParticipant = (p: ParticipantDetail): TradeParticipantResponse => ({
-      role: p.role,
-      user: this.users.toLite(p.user),
-      itemsTotalCents: p.role === 'INITIATOR' ? calculation.initiatorTotalCents : calculation.counterpartyTotalCents,
-      hasAcceptedCurrentVersion: p.acceptedVersion === trade.version && ['PROPOSED', 'ACCEPTED', 'COMPLETED'].includes(trade.status),
-      completionConfirmed: p.completionConfirmedAt !== null,
-      items: p.items.map((i) => this.toItem(i)),
-    });
-
     return {
-      id: trade.id,
-      status: trade.status,
-      version: trade.version,
+      ...shared,
+      initiator: initiator.response,
+      counterparty: counterparty.response,
       myRole: me.role,
-      initiator: toParticipant(initiator),
-      counterparty: toParticipant(counterparty),
-      calculation,
-      cash,
-      finalValue: finalValue(calculation, cash),
       allowedActions: allowedActions({
         status: trade.status,
         version: trade.version,
@@ -126,18 +112,17 @@ export class TradeMapper {
         reviewWindowOpen: isReviewWindowOpen(trade.completedAt),
       }),
       myReview: myReview ? this.toReview(myReview) : null,
-      proposedByRole: trade.proposedByRole,
-      proposalCount: trade.proposalCount,
-      isCounterOffer: isCounterOffer(trade),
-      event: trade.event,
-      proposedAt: toIso(trade.proposedAt),
-      acceptedAt: toIso(trade.acceptedAt),
-      completedAt: toIso(trade.completedAt),
-      cancelledAt: toIso(trade.cancelledAt),
-      declinedAt: toIso(trade.declinedAt),
-      createdAt: trade.createdAt.toISOString(),
-      updatedAt: trade.updatedAt.toISOString(),
-      disclaimer: MARKET_VALUE_DISCLAIMER,
+    };
+  }
+
+  /** Neither side's view: no viewer role or actions, and every review. */
+  toAdminDetail(trade: TradeDetail): AdminTradeDetail {
+    const { initiator, counterparty, ...shared } = this.sharedDetail(trade);
+    return {
+      ...shared,
+      initiator: initiator.response,
+      counterparty: counterparty.response,
+      reviews: trade.reviews.map((r) => this.toReview(r)),
     };
   }
 
@@ -164,7 +149,72 @@ export class TradeMapper {
     };
   }
 
-  private requireRole(participants: ParticipantDetail[], role: TradeRole): ParticipantDetail {
+  toAdminListItem(trade: AdminTradeListRow): AdminTradeListItem {
+    const initiator = this.requireRole(trade.participants, 'INITIATOR');
+    const counterparty = this.requireRole(trade.participants, 'COUNTERPARTY');
+    return {
+      id: trade.id,
+      status: trade.status,
+      initiator: this.users.toLite(initiator.user),
+      counterparty: this.users.toLite(counterparty.user),
+      initiatorItemsTotalCents: initiator.itemsTotalCents,
+      counterpartyItemsTotalCents: counterparty.itemsTotalCents,
+      itemCount: initiator._count.items + counterparty._count.items,
+      cash: { payer: trade.agreedCashPayer, amountCents: trade.agreedCashCents, isManual: trade.cashIsManual },
+      isCounterOffer: isCounterOffer(trade),
+      event: trade.event,
+      createdAt: trade.createdAt.toISOString(),
+      updatedAt: trade.updatedAt.toISOString(),
+      completedAt: toIso(trade.completedAt),
+    };
+  }
+
+  /** Everything about a trade that does not depend on who is looking. */
+  private sharedDetail(trade: TradeDetail) {
+    const initiator = this.requireRole(trade.participants, 'INITIATOR');
+    const counterparty = this.requireRole(trade.participants, 'COUNTERPARTY');
+    const toLines = (p: ParticipantDetail) => p.items.map((i) => ({ unitValueCents: i.unitValueCents, quantity: i.quantity }));
+    const calculation = calculateTrade(toLines(initiator), toLines(counterparty));
+    const cash = effectiveCash(calculation, {
+      isManual: trade.cashIsManual,
+      payer: trade.agreedCashPayer,
+      amountCents: trade.agreedCashCents,
+    });
+
+    const toParticipant = (p: ParticipantDetail): TradeParticipantResponse => ({
+      role: p.role,
+      user: this.users.toLite(p.user),
+      itemsTotalCents: p.role === 'INITIATOR' ? calculation.initiatorTotalCents : calculation.counterpartyTotalCents,
+      hasAcceptedCurrentVersion: p.acceptedVersion === trade.version && ['PROPOSED', 'ACCEPTED', 'COMPLETED'].includes(trade.status),
+      completionConfirmed: p.completionConfirmedAt !== null,
+      items: p.items.map((i) => this.toItem(i)),
+    });
+
+    return {
+      initiator: { items: initiator.items, response: toParticipant(initiator) },
+      counterparty: { items: counterparty.items, response: toParticipant(counterparty) },
+      id: trade.id,
+      status: trade.status,
+      version: trade.version,
+      calculation,
+      cash,
+      finalValue: finalValue(calculation, cash),
+      proposedByRole: trade.proposedByRole,
+      proposalCount: trade.proposalCount,
+      isCounterOffer: isCounterOffer(trade),
+      event: trade.event,
+      proposedAt: toIso(trade.proposedAt),
+      acceptedAt: toIso(trade.acceptedAt),
+      completedAt: toIso(trade.completedAt),
+      cancelledAt: toIso(trade.cancelledAt),
+      declinedAt: toIso(trade.declinedAt),
+      createdAt: trade.createdAt.toISOString(),
+      updatedAt: trade.updatedAt.toISOString(),
+      disclaimer: MARKET_VALUE_DISCLAIMER,
+    };
+  }
+
+  private requireRole<T extends { role: TradeRole }>(participants: T[], role: TradeRole): T {
     const participant = participants.find((p) => p.role === role);
     if (!participant) throw new Error(`Trade is missing ${role}`);
     return participant;
