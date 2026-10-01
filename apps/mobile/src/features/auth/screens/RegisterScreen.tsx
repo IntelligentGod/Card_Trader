@@ -8,7 +8,6 @@ import { Button } from '../../../components/Button';
 import { TextField } from '../../../components/Controls';
 import { Screen } from '../../../components/Screen';
 import type { RootScreenProps } from '../../../navigation/types';
-import { useAuthNotice } from '../../../stores/authNotice';
 import { colors, spacing } from '../../../theme';
 import { SocialSignInButtons } from '../components/SocialSignInButtons';
 import { completeSignIn } from '../sessionActions';
@@ -24,11 +23,7 @@ export function RegisterScreen({ navigation }: RootScreenProps<'Register'>) {
   const register = useMutation({
     mutationFn: () =>
       api.auth.register({ email: email.trim(), password, username: normalizeUsername(username), displayName: displayName.trim() }),
-    onSuccess: (response) => {
-      // A verification link was emailed: say so once, before the app opens.
-      if (!response.user.emailVerified) useAuthNotice.getState().setVerifyEmailIntro(true);
-      return completeSignIn(response);
-    },
+    onSuccess: (response) => completeSignIn(response),
   });
 
   const submit = () => {

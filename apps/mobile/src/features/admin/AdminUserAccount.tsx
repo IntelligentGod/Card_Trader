@@ -38,7 +38,6 @@ export function AccountSection({ user }: { user: AdminUserDetail }) {
       <Row label="Status" value={USER_STATUS_LABELS[user.status]} tone={blocked ? colors.negative : undefined} />
       {blocked && user.blockedAt ? <Row label="Blocked since" value={formatTimestamp(user.blockedAt)} /> : null}
       {blocked && user.blockReason ? <Row label="Block reason" value={user.blockReason} /> : null}
-      <Row label="Email verified" value={yesNo(user.emailVerified)} />
       <Row label="2FA enabled" value={yesNo(user.twoFactorEnabled)} />
       <Row label="Sign-in methods" value={signInMethodsText(user.authProviders)} />
       {user.mustChangePassword ? <Row label="Password" value="Must change at next sign-in" tone={colors.warning} /> : null}

@@ -94,7 +94,6 @@ function EditUserForm({ user, onDone }: { user: AdminUserDetail; onDone: () => v
           autoCorrect={false}
           keyboardType="email-address"
           maxLength={254}
-          hint="Changing it marks the email unverified and sends a verification link."
           error={errors.email}
         />
         <TextField

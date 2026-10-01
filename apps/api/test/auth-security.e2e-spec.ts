@@ -1,7 +1,6 @@
 import { createHash } from 'crypto';
 import type { AuthResponse, MeResponse, RecoveryCodesResponse, TwoFactorChallengeResponse, TwoFactorSetupResponse } from '@card-trader/shared';
 import { base32Decode, hotp, totpStep } from '../src/common/security/totp';
-import { MailService } from '../src/modules/mail/mail.service';
 import { createTestIdentityProviders, type TestIdentityProviders } from './oidc-test-keys';
 import { API, auth, createTestApp, registerUser, resetDatabase, type TestContext, type TestUser } from './utils';
 
@@ -11,12 +10,10 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 describe('Sign-in security (e2e)', () => {
   let ctx: TestContext;
   let idp: TestIdentityProviders;
-  let mail: MailService;
 
   beforeAll(async () => {
     idp = await createTestIdentityProviders();
     ctx = await createTestApp({ oidcKeys: idp.keys });
-    mail = ctx.app.get(MailService);
     await resetDatabase(ctx.prisma);
   });
 
@@ -24,60 +21,15 @@ describe('Sign-in security (e2e)', () => {
     await ctx.app.close();
   });
 
-  const lastLinkToken = (to: string): string => {
-    const message = [...mail.outbox].reverse().find((m) => m.to === to);
-    const token = message?.text.match(/token=([A-Za-z0-9_-]+)/)?.[1];
-    if (!token) throw new Error(`No verification email for ${to}`);
-    return token;
-  };
   const me = (user: { token: string }) => ctx.http().get(`${API}/users/me`).set(auth(user)).then((r) => r.body as MeResponse);
   const login = (email: string, password = PASSWORD) => ctx.http().post(`${API}/auth/login`).send({ email, password });
 
-  describe('email verification', () => {
-    let alice: TestUser;
-
-    beforeAll(async () => {
-      alice = await registerUser(ctx, 'Alice');
-    });
-
-    it('creates the account unverified and emails a link', async () => {
+  describe('sign-up', () => {
+    it('creates a password account without any email verification step', async () => {
+      const alice = await registerUser(ctx, 'Alice');
       expect(await me(alice)).toMatchObject({ emailVerified: false, hasPassword: true, authProviders: ['PASSWORD'], twoFactorEnabled: false });
-      const message = mail.outbox.find((m) => m.to === alice.email);
-      expect(message?.subject).toBe('Verify your Card Trader email');
-      expect(message?.html).toContain('Verify Email');
-      // Only a hash is stored, never the token itself.
-      const token = lastLinkToken(alice.email);
-      const row = await ctx.prisma.emailVerificationToken.findFirstOrThrow({ where: { userId: alice.userId } });
-      expect(row.tokenHash).toBe(sha256(token));
-      expect(row.tokenHash).not.toContain(token);
-    });
-
-    it('rate limits resends', async () => {
-      const soon = await ctx.http().post(`${API}/auth/resend-verification`).set(auth(alice)).expect(429);
-      expect(soon.body.code).toBe('RESEND_TOO_SOON');
-      await ctx.prisma.emailVerificationToken.updateMany({ where: { userId: alice.userId }, data: { createdAt: new Date(Date.now() - 2 * 60_000) } });
-      await ctx.http().post(`${API}/auth/resend-verification`).set(auth(alice)).expect(204);
-    });
-
-    it('verifies once through the emailed link and refuses reuse', async () => {
-      const token = lastLinkToken(alice.email);
-      const page = await ctx.http().get(`${API}/auth/verify-email`).query({ token }).expect(200);
-      expect(page.headers['content-type']).toContain('text/html');
-      expect(page.text).toContain('Email verified');
-      expect((await me(alice)).emailVerified).toBe(true);
-
-      const again = await ctx.http().get(`${API}/auth/verify-email`).query({ token }).expect(400);
-      expect(again.text).toContain('invalid or has expired');
-      expect((await ctx.http().post(`${API}/auth/resend-verification`).set(auth(alice)).expect(409)).body.code).toBe('EMAIL_ALREADY_VERIFIED');
-    });
-
-    it('refuses expired and unknown tokens', async () => {
-      const bob = await registerUser(ctx, 'Bob');
-      const token = lastLinkToken(bob.email);
-      await ctx.prisma.emailVerificationToken.updateMany({ where: { userId: bob.userId }, data: { expiresAt: new Date(Date.now() - 1000) } });
-      expect((await ctx.http().post(`${API}/auth/verify-email`).send({ token }).expect(400)).body.code).toBe('VERIFICATION_LINK_INVALID');
-      await ctx.http().post(`${API}/auth/verify-email`).send({ token: 'x'.repeat(43) }).expect(400);
-      expect((await me(bob)).emailVerified).toBe(false);
+      await ctx.http().post(`${API}/auth/resend-verification`).set(auth(alice)).expect(404);
+      await ctx.http().get(`${API}/auth/verify-email`).query({ token: 'x'.repeat(43) }).expect(404);
     });
   });
 
@@ -97,12 +49,13 @@ describe('Sign-in security (e2e)', () => {
       expect(stored).toMatchObject({ providerUserId: 'google-1', providerEmail: 'gina@gmail.com' });
     });
 
-    it('links to an existing account only when that account’s email is verified', async () => {
+    it('links to an existing account only when that account’s email is proven', async () => {
       const carol = await registerUser(ctx, 'Carol');
       const token = await idp.googleToken({ sub: 'google-carol', email: carol.email, email_verified: true });
       expect((await googleLogin(token).expect(409)).body.code).toBe('ACCOUNT_EXISTS_UNVERIFIED');
 
-      await ctx.http().get(`${API}/auth/verify-email`).query({ token: lastLinkToken(carol.email) }).expect(200);
+      // Only Google/Apple sign-up or the super-admin bootstrap mark an email as proven now.
+      await ctx.prisma.user.update({ where: { id: carol.userId }, data: { emailVerifiedAt: new Date() } });
       const linked = (await googleLogin(token).expect(200)).body as AuthResponse;
       expect(linked.user.publicId).toBe(carol.publicId);
       expect(linked.user.authProviders.sort()).toEqual(['GOOGLE', 'PASSWORD']);

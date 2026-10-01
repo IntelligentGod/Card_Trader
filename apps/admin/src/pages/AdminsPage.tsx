@@ -65,7 +65,6 @@ export function AdminsPage() {
                     <td>
                       {u.email}
                       <div className="inline-list">
-                        {!u.emailVerified && <Badge tone="amber">Unverified</Badge>}
                         {u.twoFactorEnabled ? <Badge tone="green">2FA</Badge> : <Badge>No 2FA</Badge>}
                       </div>
                     </td>

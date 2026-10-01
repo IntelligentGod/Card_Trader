@@ -9,7 +9,6 @@ import type {
   NotificationResponse,
   Paginated,
 } from '@card-trader/shared';
-import { MailService } from '../src/modules/mail/mail.service';
 import { API, auth, createTestApp, registerUser, resetDatabase, type TestContext, type TestUser } from './utils';
 
 const PASSWORD = 'Tr4ding-Cards-Rock';
@@ -191,12 +190,11 @@ describe('Admin roles: SUPER_ADMIN, ADMIN, USER (e2e)', () => {
   });
 
   describe('creating admins', () => {
-    it('the super admin creates an admin who must change the password and verify the email', async () => {
+    it('the super admin creates an admin who must change the password', async () => {
       const created = (
         await post(superAdmin, '/admin/admins', { email: 'Nina@Example.com', username: 'nina_admin', displayName: 'Nina', temporaryPassword: 'Welcome-Board-2026' }).expect(201)
       ).body as AdminUserDetail;
       expect(created).toMatchObject({ role: 'ADMIN', email: 'nina@example.com', mustChangePassword: true, emailVerified: false });
-      expect(ctx.app.get(MailService).outbox.some((m) => m.to === 'nina@example.com')).toBe(true);
       const nina = (await login('nina@example.com', 'Welcome-Board-2026').expect(200)).body as AuthResponse;
       expect((await get({ token: nina.tokens.accessToken }, '/admin/overview').expect(403)).body.code).toBe('PASSWORD_CHANGE_REQUIRED');
       expect((await history(created.publicId))[0]).toMatchObject({ action: 'ADMIN_CREATED' });

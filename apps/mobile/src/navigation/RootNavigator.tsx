@@ -18,7 +18,6 @@ import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import { RegisterScreen } from '../features/auth/screens/RegisterScreen';
 import { SplashScreen } from '../features/auth/screens/SplashScreen';
 import { TwoFactorVerifyScreen } from '../features/auth/screens/TwoFactorVerifyScreen';
-import { VerifyEmailScreen } from '../features/auth/screens/VerifyEmailScreen';
 import { HelpArticleScreen } from '../features/help/HelpArticleScreen';
 import { HelpCenterScreen } from '../features/help/HelpCenterScreen';
 import { NotificationHistoryScreen } from '../features/notifications/NotificationHistoryScreen';
@@ -51,7 +50,6 @@ import { TradeConfirmationScreen } from '../features/trades/screens/TradeConfirm
 import { TradeHistoryScreen } from '../features/trades/screens/TradeListScreens';
 import { OtherUserCollectionScreen } from '../features/users/OtherUserCollectionScreen';
 import { OtherUserProfileScreen } from '../features/users/OtherUserProfileScreen';
-import { useAuthNotice } from '../stores/authNotice';
 import { useSession } from '../stores/session';
 import { colors } from '../theme';
 import { MainTabs } from './MainTabs';
@@ -67,7 +65,6 @@ export function RootNavigator() {
   const status = useSession((s) => s.status);
   /** an admin reset the password: nothing else is allowed until it's changed */
   const mustChangePassword = useSession((s) => !!s.user?.mustChangePassword);
-  const verifyEmailIntro = useAuthNotice((s) => s.verifyEmailIntro);
 
   return (
     <Stack.Navigator
@@ -96,8 +93,6 @@ export function RootNavigator() {
           component={ChangePasswordScreen}
           options={{ title: 'Choose a new password', headerBackVisible: false, gestureEnabled: false }}
         />
-      ) : verifyEmailIntro ? (
-        <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={{ headerShown: false }} />
       ) : (
         <>
           <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />

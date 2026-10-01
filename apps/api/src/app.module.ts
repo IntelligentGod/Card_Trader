@@ -12,7 +12,6 @@ import { CardsModule } from './modules/cards/cards.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EventsModule } from './modules/events/events.module';
 import { HealthController } from './modules/health/health.controller';
-import { MailModule } from './modules/mail/mail.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { PricingModule } from './modules/pricing/pricing.module';
@@ -43,7 +42,6 @@ import { PrismaModule } from './prisma/prisma.module';
         skipIf: () => config.get('NODE_ENV') === 'test',
       }),
     }),
-    MailModule,
     UploadsModule,
     UsersModule,
     AuthModule,

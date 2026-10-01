@@ -30,7 +30,7 @@ export function SettingsScreen({ navigation }: RootScreenProps<'Settings'>) {
         <LinkRow
           icon="shield-checkmark-outline"
           label="Security"
-          detail={user && !user.emailVerified ? 'Verify email' : user?.twoFactorEnabled ? '2FA on' : undefined}
+          detail={user?.twoFactorEnabled ? '2FA on' : undefined}
           testID="settings-security"
           onPress={() => navigation.navigate('Security')}
         />

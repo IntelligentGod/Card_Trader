@@ -129,10 +129,6 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export interface VerifyEmailRequest {
-  token: string;
-}
-
 // ───────────── Users ─────────────
 export const SOCIAL_LINK_KEYS = ['instagram', 'x', 'tiktok', 'youtube', 'facebook', 'website'] as const;
 export type SocialLinkKey = (typeof SOCIAL_LINK_KEYS)[number];

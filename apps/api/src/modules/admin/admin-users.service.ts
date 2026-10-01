@@ -4,7 +4,6 @@ import type { AdminAuditEntry, AdminUserDetail } from '@card-trader/shared';
 import { Errors } from '../../common/errors/app.exception';
 import { generatePublicId } from '../../common/utils/ids';
 import { PrismaService, type Tx } from '../../prisma/prisma.service';
-import { EmailVerificationService } from '../auth/email-verification.service';
 import { PasswordService } from '../auth/password.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { StorageService } from '../uploads/storage.service';
@@ -44,7 +43,6 @@ export class AdminUsersService {
     private readonly storage: StorageService,
     private readonly passwords: PasswordService,
     private readonly notifications: NotificationsService,
-    private readonly emailVerification: EmailVerificationService,
   ) {}
 
   async update(ctx: AdminContext, publicId: string, dto: AdminUpdateUserDto): Promise<AdminUserDetail> {
@@ -90,11 +88,6 @@ export class AdminUsersService {
     );
 
     if (changes.avatar && profile.avatarKey) await this.storage.delete(profile.avatarKey);
-    if (changes.email) {
-      await this.emailVerification.send(user.id, { enforceLimits: false }).catch((error: unknown) => {
-        this.logger.error(`Verification email after admin email change failed: ${String(error)}`);
-      });
-    }
     return this.reads.getUser(ctx, publicId);
   }
 
@@ -212,7 +205,7 @@ export class AdminUsersService {
     return this.reads.getUser(ctx, publicId);
   }
 
-  /** SUPER_ADMIN only (route): a new ADMIN account that must choose its own password and verify its email. */
+  /** SUPER_ADMIN only (route): a new ADMIN account that must choose its own password. */
   async createAdmin(ctx: AdminContext, dto: AdminCreateAdminDto): Promise<AdminUserDetail> {
     const weakness = this.passwords.weaknessReason(dto.temporaryPassword, dto.email);
     if (weakness) throw Errors.badRequest('WEAK_PASSWORD', weakness);
@@ -237,9 +230,6 @@ export class AdminUsersService {
         return user;
       }),
     );
-    await this.emailVerification.send(created.id, { enforceLimits: false }).catch((error: unknown) => {
-      this.logger.error(`Verification email to new admin failed: ${String(error)}`);
-    });
     return this.reads.getUser(ctx, created.publicId);
   }
 

@@ -158,7 +158,6 @@ model User {
   twoFactorLastStep        Int?
 
   authProviders           UserAuthProvider[]
-  emailVerificationTokens EmailVerificationToken[]
   recoveryCodes           TwoFactorRecoveryCode[]
   loginChallenges         LoginChallenge[]
 
@@ -666,20 +665,6 @@ model UserAuthProvider {
 
   @@unique([provider, providerUserId])
   @@unique([userId, provider])
-}
-
-/// Only the SHA-256 of the emailed token is stored; single use, expires.
-model EmailVerificationToken {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
-  tokenHash String    @unique @db.Char(64)
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt(sort: Desc)])
 }
 
 /// Shown once at 2FA setup; stored as SHA-256, each usable once.

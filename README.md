@@ -90,10 +90,10 @@ and after), shown as **History** on the user or card.
   for more). To point the site at another API, set `VITE_API_URL` in
   `apps/admin/.env` (see `apps/admin/.env.example`).
 
-Sign-in (Google, Apple, email + 2FA), email verification, roles
+Sign-in (Google, Apple, email + 2FA), roles
 (USER / ADMIN / SUPER_ADMIN), blocking, password resets and the audit log are
 described in [docs/AUTH_AND_ADMIN.md](docs/AUTH_AND_ADMIN.md), including the
-super-admin bootstrap and the Google/Apple/SMTP setup.
+super-admin bootstrap and the Google/Apple setup.
 
 The super admin manages admins in the app; roles can also be set from the command line:
 

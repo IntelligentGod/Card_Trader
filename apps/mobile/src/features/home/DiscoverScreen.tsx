@@ -13,7 +13,6 @@ import {
   type TradeListItem,
   type ValueRange,
 } from '@card-trader/shared';
-import { errorMessage } from '../../api/client';
 import { api } from '../../api/endpoints';
 import { queryKeys } from '../../api/queryKeys';
 import { AppText } from '../../components/AppText';
@@ -24,11 +23,9 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { EmptyState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { TabScreenProps } from '../../navigation/types';
-import { useAuthNotice } from '../../stores/authNotice';
 import { useSession } from '../../stores/session';
 import { categoryColors, colors, radius, shadow, spacing } from '../../theme';
 import { greeting } from '../../utils/format';
-import { useResendVerification } from '../auth/hooks';
 import { useUnreadCount } from '../notifications/hooks';
 import { usePortfolioHistory, usePortfolioSummary, useTopCards } from '../portfolio/hooks';
 import { useTradeList } from '../trades/hooks';
@@ -95,8 +92,6 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
         />
         <HeaderButton icon="help-circle-outline" label="Help Center" onPress={() => navigation.navigate('HelpCenter')} testID="help-button" />
       </View>
-
-      <VerifyEmailReminder />
 
       <HeroValueCard
         summary={summary.data}
@@ -443,37 +438,6 @@ function TradeRow({ trade, myName, myAvatar, onPress }: { trade: TradeListItem; 
   );
 }
 
-/** Dismissible reminder while the email is unverified; it doesn't block anything. */
-function VerifyEmailReminder() {
-  const user = useSession((s) => s.user);
-  const dismissed = useAuthNotice((s) => s.verifyBannerDismissed);
-  const dismiss = useAuthNotice((s) => s.dismissVerifyBanner);
-  const resend = useResendVerification();
-  if (!user || user.emailVerified || dismissed) return null;
-
-  return (
-    <View style={styles.reminder} testID="verify-email-banner">
-      <Ionicons name="mail-unread-outline" size={20} color={colors.warning} />
-      <View style={styles.flex}>
-        <AppText variant="bodyStrong">Verify your email</AppText>
-        <AppText variant="caption" color={resend.error ? colors.negative : colors.textMuted}>
-          {resend.isSuccess ? `Sent to ${user.email}` : resend.error ? errorMessage(resend.error) : `Open the link we sent to ${user.email}`}
-        </AppText>
-      </View>
-      {!resend.isSuccess ? (
-        <Pressable onPress={() => resend.mutate()} disabled={resend.isPending} hitSlop={8} accessibilityRole="button">
-          <AppText variant="bodyStrong" color={colors.primary}>
-            {resend.isPending ? 'Sending…' : 'Resend'}
-          </AppText>
-        </Pressable>
-      ) : null}
-      <Pressable onPress={dismiss} hitSlop={10} accessibilityRole="button" accessibilityLabel="Dismiss reminder">
-        <Ionicons name="close" size={18} color={colors.textSubtle} />
-      </Pressable>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   bold: { fontWeight: '700' },
@@ -499,14 +463,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.negative,
     borderWidth: 1.5,
     borderColor: colors.surface,
-  },
-  reminder: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.warningSoft,
-    borderRadius: radius.md,
-    padding: spacing.md,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
   seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },

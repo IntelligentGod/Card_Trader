@@ -126,7 +126,6 @@ export const api = {
     /** returns new tokens; every other session is signed out */
     changePassword: (body: ChangePasswordRequest) =>
       apiRequest<AuthResponse>('/auth/change-password', { method: 'POST', body }),
-    resendVerification: () => apiRequest<void>('/auth/resend-verification', { method: 'POST' }),
     twoFactorSetup: () => apiRequest<TwoFactorSetupResponse>('/auth/2fa/setup', { method: 'POST' }),
     twoFactorEnable: (code: string) => apiRequest<RecoveryCodesResponse>('/auth/2fa/enable', { method: 'POST', body: { code } }),
     twoFactorDisable: (body: TwoFactorProofRequest) => apiRequest<void>('/auth/2fa/disable', { method: 'POST', body }),

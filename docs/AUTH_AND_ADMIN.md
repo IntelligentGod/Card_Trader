@@ -1,4 +1,4 @@
-# Sign-in, 2FA, email verification, notifications and admin roles
+# Sign-in, 2FA, notifications and admin roles
 
 This is the operator guide for the security features: what to configure, how to
 bootstrap the super admin, and how to test each flow. API details live in
@@ -16,13 +16,11 @@ Swagger (`/docs` in development) and in `packages/shared/src/api-types.ts`.
 | `APPLE_CLIENT_IDS` | for Apple sign-in | Comma-separated audiences — the iOS bundle id `com.cardtrader.app` |
 | `TWO_FACTOR_ENCRYPTION_KEY` | yes in production | 32 random bytes, base64. Encrypts TOTP secrets (AES-256-GCM). Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. **Changing it makes every existing 2FA secret unreadable** |
 | `TWO_FACTOR_ISSUER` | no | Name shown in authenticator apps (default `Card Trader`) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` | yes in production | Any SMTP provider. Without `SMTP_HOST`, development prints emails to the API log |
-| `EMAIL_FROM` | yes | e.g. `Card Trader <no-reply@yourdomain.com>` — must be a sender your provider allows |
-| `SUPPORT_EMAIL` | no | Support address |
-| `EMAIL_VERIFICATION_TTL_HOURS` | no | Link lifetime (default 24) |
-| `PUBLIC_BASE_URL` | yes | Used to build the verification link — must be reachable from the user's phone/browser (your LAN IP in development, your HTTPS domain in production) |
+| `PUBLIC_BASE_URL` | yes | Base of uploaded image URLs — must be reachable from the user's phone/browser (your LAN IP in development, your HTTPS domain in production) |
 
-Production refuses to start without `TWO_FACTOR_ENCRYPTION_KEY` and `SMTP_HOST`.
+Production refuses to start without `TWO_FACTOR_ENCRYPTION_KEY`.
+
+There is no email verification and the API sends no email, so no SMTP provider is needed. Accounts created with a password are usable immediately. Because nobody proved that inbox, Google/Apple sign-in with the same email is refused (`ACCOUNT_EXISTS_UNVERIFIED`); the user signs in with the password and links Google/Apple in Settings → Security instead.
 
 ### Mobile (`apps/mobile/.env` / `.env.production`)
 
@@ -54,21 +52,7 @@ Requires a paid Apple Developer account.
 
 The app sends Apple a SHA-256 of a one-time nonce and the server checks the token carries it, so a token can't be replayed. Apple shares the user's name only on the very first sign-in; private-relay emails (`…@privaterelay.appleid.com`) are treated as verified. Android shows Google and email only (by decision).
 
-## 4. Email provider (SMTP)
-
-Any SMTP service works. Typical settings:
-
-| Provider | Host | Port / secure | User / password |
-|---|---|---|---|
-| Amazon SES | `email-smtp.<region>.amazonaws.com` | 587 / false | SMTP credentials from SES |
-| SendGrid | `smtp.sendgrid.net` | 587 / false | `apikey` / your API key |
-| Mailgun | `smtp.mailgun.org` | 587 / false | domain SMTP login |
-| Brevo | `smtp-relay.brevo.com` | 587 / false | SMTP login / key |
-| Gmail (testing only) | `smtp.gmail.com` | 465 / true | your address / an **app password** (2-step verification required) |
-
-Verify your sending domain with the provider (SPF/DKIM) so mail doesn't land in spam, and set `EMAIL_FROM` to an address on that domain.
-
-## 5. Bootstrapping the super admin
+## 4. Bootstrapping the super admin
 
 1. Put in `apps/api/.env`:
    ```
@@ -88,7 +72,7 @@ npm run admin:revoke -w @card-trader/api -- someone@example.com   # back to USER
 npm run admin:list   -w @card-trader/api
 ```
 
-## 6. Roles
+## 5. Roles
 
 | | USER accounts | ADMIN accounts | SUPER_ADMIN |
 |---|---|---|---|
@@ -97,7 +81,7 @@ npm run admin:list   -w @card-trader/api
 
 Nobody can change their own role or status. Enforced on the server for every request (`RolesGuard` + `permissionsFor`); the role is read from the database each time, so changes apply immediately. Blocking and password resets sign the user out everywhere at once. Every admin change is in the audit log (who, what, before/after, reason, IP); the full log and IPs are visible to the super admin only.
 
-## 7. Testing
+## 6. Testing
 
 Automated: `npm run test:e2e` (sign-in security, admin roles, notifications, …) and `npm test`.
 
@@ -108,18 +92,14 @@ Automated: `npm run test:e2e` (sign-in security, admin roles, notifications, …
 4. Sign out and in: after the password you're asked for a code. Try a wrong code (rejected), the right one (signed in), a recovery code (works once).
 5. Five wrong codes end the attempt — sign in again.
 
-### Email verification by hand
-Register a new account. Without SMTP the API log shows the email; open the link in a browser → "Email verified" → back in the app the reminder disappears. "Resend" works once a minute, five times an hour.
-
 ### Notifications by hand
 Trigger one for Tom, e.g. as Sam edit the Austin show's admission (see README), or as the super admin send an announcement (admin → Announcement). With the app open a banner slides in at the top and disappears after a few seconds; tap it to open. The bell shows the unread count; the list shows the latest 6 with **Show all** for the full history; **Mark all as read** clears the badge. With the app in the background you get a phone notification instead. (There's no push service yet: notifications are fetched every 30 s while the app runs.)
 
-## 8. Manual steps checklist
+## 7. Manual steps checklist
 
 - [ ] Set `SUPER_ADMIN_INITIAL_PASSWORD`, start the API, sign in, change the password, remove it from `.env`.
 - [ ] Create the Google OAuth clients; set `GOOGLE_CLIENT_IDS` (API) and `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (app).
 - [ ] (iOS) Enable Sign in with Apple on the App ID; set `APPLE_CLIENT_IDS`.
-- [ ] Configure SMTP and `EMAIL_FROM`; verify the sending domain.
 - [ ] Set `PUBLIC_BASE_URL` to an address phones can reach (HTTPS in production).
 - [ ] Generate a production `TWO_FACTOR_ENCRYPTION_KEY` and keep it backed up with your secrets.
 - [ ] Rebuild the app (`npx expo prebuild --clean`, then the APK) — new native modules.

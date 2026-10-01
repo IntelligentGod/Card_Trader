@@ -110,7 +110,6 @@ export function UsersPage() {
                     <td>
                       {u.email}
                       <div className="inline-list">
-                        {!u.emailVerified && <Badge tone="amber">Unverified</Badge>}
                         {u.twoFactorEnabled && <Badge tone="green">2FA</Badge>}
                       </div>
                     </td>

@@ -12,7 +12,6 @@ import {
   type TwoFactorCodeRequest,
   type TwoFactorProofRequest,
   type TwoFactorVerifyRequest,
-  type VerifyEmailRequest,
 } from '@card-trader/shared';
 import { LowercaseEmail, SanitizedText } from '../../../common/validation/transforms';
 
@@ -171,11 +170,4 @@ export class ChangePasswordDto implements ChangePasswordRequest {
   @MinLength(PASSWORD_MIN, { message: `Password must be at least ${PASSWORD_MIN} characters` })
   @MaxLength(PASSWORD_MAX)
   newPassword: string;
-}
-
-export class VerifyEmailDto implements VerifyEmailRequest {
-  @ApiProperty()
-  @IsString()
-  @Length(20, 200)
-  token: string;
 }

@@ -416,9 +416,6 @@ function AccountInfo({ user: u }: { user: AdminUserDetail }) {
     <div className="account-box">
       <h2>Account</h2>
       <dl className="fields">
-        <Field label="Email">
-          <YesNo value={u.emailVerified} yes="Verified" no="Not verified" warnWhenNo />
-        </Field>
         <Field label="Two-factor authentication">
           <YesNo value={u.twoFactorEnabled} yes="Enabled" no="Off" />
         </Field>

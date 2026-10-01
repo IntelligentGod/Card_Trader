@@ -6,7 +6,6 @@ import type { AuthUser } from '../../common/auth/auth-user';
 import { AllowWhilePasswordChangeRequired, CurrentUser } from '../../common/auth/decorators';
 import { AuthService } from './auth.service';
 import { AppleSignInDto, ChangePasswordDto, GoogleSignInDto, TwoFactorCodeDto, TwoFactorProofDto } from './dto/auth.dto';
-import { EmailVerificationService } from './email-verification.service';
 import { TwoFactorService } from './two-factor.service';
 
 /** Security settings of the signed-in account. */
@@ -17,7 +16,6 @@ export class AccountSecurityController {
   constructor(
     private readonly auth: AuthService,
     private readonly twoFactor: TwoFactorService,
-    private readonly emailVerification: EmailVerificationService,
   ) {}
 
   /** Also the way out of an admin password reset, so it stays reachable then. */
@@ -27,13 +25,6 @@ export class AccountSecurityController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   changePassword(@CurrentUser() user: AuthUser, @Body() dto: ChangePasswordDto): Promise<AuthResponse> {
     return this.auth.changePassword(user.userId, dto);
-  }
-
-  @Post('resend-verification')
-  @HttpCode(204)
-  @Throttle({ default: { limit: 3, ttl: 60_000 } })
-  async resendVerification(@CurrentUser() user: AuthUser): Promise<void> {
-    await this.emailVerification.send(user.userId);
   }
 
   @Post('2fa/setup')

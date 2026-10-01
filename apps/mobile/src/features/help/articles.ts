@@ -270,21 +270,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     blocks: [
       p('You can sign in with your email and password, and — where available on your phone — with Google or Apple. Manage them in Settings → Security → Sign-in methods.'),
       p('If you signed up with Google or Apple you can also set a password there. Keep at least one way to sign in linked.'),
-      tip('If Google or Apple says an account with your email already exists but isn’t verified, sign in with your password first and verify your email, then link Google or Apple.'),
-    ],
-  },
-  {
-    id: 'verify-email',
-    section: 'account',
-    title: 'Verify your email address',
-    summary: 'Open the link we sent you.',
-    blocks: [
-      steps(
-        'Open the email from Card Trader and tap the verification link.',
-        'Tap “Open Card Trader” on the page that opens, or switch back to the app — it notices the change automatically.',
-        'No email? Check spam, then tap Resend in the reminder on Discover or in Settings → Security.',
-      ),
-      p('You can resend once a minute, a few times per hour. You can keep using the app while your email is unverified.'),
+      tip('If Google or Apple says an account with your email already exists, sign in with your password first, then link Google or Apple in Settings → Security.'),
     ],
   },
   {
@@ -384,9 +370,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     id: 'keep-account-safe',
     section: 'privacy',
     title: 'Keep your account safe',
-    summary: 'Strong password, 2FA, verified email.',
+    summary: 'Strong password and 2FA.',
     blocks: [
-      p('Use a long password you don’t use anywhere else, turn on two-factor authentication and verify your email address.'),
+      p('Use a long password you don’t use anywhere else, and turn on two-factor authentication.'),
       p('Card Trader staff will never ask for your password or a 2FA code. If you notice something unusual, change your password — that signs out every other device — and contact support.'),
     ],
   },

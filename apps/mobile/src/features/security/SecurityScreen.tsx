@@ -13,8 +13,7 @@ import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
 import { colors, radius, spacing } from '../../theme';
 import { socialErrorMessage, useSocialProviders, type SocialProvider } from '../auth/components/SocialSignInButtons';
-import { applyMe, useResendVerification } from '../auth/hooks';
-import { refreshMe } from '../auth/sessionActions';
+import { applyMe } from '../auth/hooks';
 import { getAppleCredential, getGoogleIdToken } from '../auth/socialSignIn';
 import { useMe } from '../profile/hooks';
 
@@ -22,13 +21,11 @@ type LinkedProvider = Exclude<AuthProviderType, 'PASSWORD'>;
 const PROVIDER_OF: Record<SocialProvider, LinkedProvider> = { google: 'GOOGLE', apple: 'APPLE' };
 const PROVIDER_NAME: Record<SocialProvider, string> = { google: 'Google', apple: 'Apple' };
 
-/** Settings → Security: email verification, password, two-factor authentication and sign-in methods. */
+/** Settings → Security: password, two-factor authentication and sign-in methods. */
 export function SecurityScreen({ navigation }: RootScreenProps<'Security'>) {
   const me = useMe();
   const user = useSession((s) => s.user);
   const available = useSocialProviders();
-  const resend = useResendVerification();
-  const check = useMutation({ mutationFn: refreshMe });
 
   const link = useMutation({
     mutationFn: async (provider: SocialProvider): Promise<MeResponse | null> => {
@@ -87,33 +84,6 @@ export function SecurityScreen({ navigation }: RootScreenProps<'Security'>) {
 
   return (
     <Screen refreshing={me.isRefetching} onRefresh={() => void me.refetch()}>
-      <Surface style={styles.group}>
-        <AppText variant="label" color={colors.textMuted}>
-          Email
-        </AppText>
-        <Row
-          icon="mail-outline"
-          title={user.email}
-          action={<StatusPill on={user.emailVerified} onLabel="Verified" offLabel="Not verified" />}
-        />
-        {!user.emailVerified ? (
-          <>
-            <AppText color={colors.textMuted}>
-              Open the link we emailed you to verify this address. It helps us reach you about your account and trades.
-            </AppText>
-            {resend.isSuccess ? <AppText color={colors.positive}>Verification email sent.</AppText> : null}
-            {resend.error ? <AppText color={colors.negative}>{errorMessage(resend.error)}</AppText> : null}
-            {check.isSuccess && !check.data.emailVerified ? (
-              <AppText color={colors.warning}>Not verified yet. Tap the link in the email first.</AppText>
-            ) : null}
-            <View style={styles.buttons}>
-              <Button title="Resend email" variant="secondary" compact style={styles.flex} loading={resend.isPending} onPress={() => resend.mutate()} />
-              <Button title="I’ve verified it" variant="secondary" compact style={styles.flex} loading={check.isPending} onPress={() => check.mutate()} />
-            </View>
-          </>
-        ) : null}
-      </Surface>
-
       <Surface style={styles.group}>
         <AppText variant="label" color={colors.textMuted}>
           Password

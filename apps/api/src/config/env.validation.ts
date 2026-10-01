@@ -28,6 +28,10 @@ export class EnvironmentVariables {
   @Max(65535)
   PORT = 3000;
 
+  /** 127.0.0.1 when a reverse proxy on the same machine is the only way in. */
+  @IsString()
+  HOST = '0.0.0.0';
+
   @IsString()
   @MinLength(1)
   DATABASE_URL: string;
@@ -103,45 +107,6 @@ export class EnvironmentVariables {
   @IsString()
   TWO_FACTOR_ISSUER = 'Card Trader';
 
-  // ── Email (SMTP) ──
-  @Transform(emptyToUndefined)
-  @IsOptional()
-  @IsString()
-  SMTP_HOST?: string;
-
-  @Transform(toInt)
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  SMTP_PORT = 587;
-
-  /** true for port 465 (implicit TLS); false uses STARTTLS when the server offers it */
-  @Transform(toBool)
-  @IsBoolean()
-  SMTP_SECURE = false;
-
-  @Transform(emptyToUndefined)
-  @IsOptional()
-  @IsString()
-  SMTP_USER?: string;
-
-  @Transform(emptyToUndefined)
-  @IsOptional()
-  @IsString()
-  SMTP_PASSWORD?: string;
-
-  @IsString()
-  EMAIL_FROM = 'Card Trader <no-reply@cardtrader.local>';
-
-  @IsString()
-  SUPPORT_EMAIL = 'support@cardtrader.local';
-
-  @Transform(toInt)
-  @IsInt()
-  @Min(1)
-  @Max(168)
-  EMAIL_VERIFICATION_TTL_HOURS = 24;
-
   @IsString()
   PRICING_PROVIDERS = 'MOCK';
 
@@ -183,7 +148,6 @@ export function validateEnv(raw: Record<string, unknown>): EnvironmentVariables 
   }
   if (config.NODE_ENV === 'production') {
     if (!config.TWO_FACTOR_ENCRYPTION_KEY) throw new Error('TWO_FACTOR_ENCRYPTION_KEY is required in production');
-    if (!config.SMTP_HOST) throw new Error('SMTP_HOST is required in production (verification emails)');
   }
   return config;
 }

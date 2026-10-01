@@ -8,7 +8,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UserMapper, userProfileInclude, type UserWithProfile } from '../users/user.mapper';
 import type { AppleSignInDto, ChangePasswordDto, LoginDto, RegisterDto, TwoFactorVerifyDto } from './dto/auth.dto';
-import { EmailVerificationService } from './email-verification.service';
 import { OidcVerifier, type VerifiedIdentity } from './oidc-verifier';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
@@ -40,7 +39,6 @@ export class AuthService {
     private readonly users: UserMapper,
     private readonly oidc: OidcVerifier,
     private readonly twoFactor: TwoFactorService,
-    private readonly emailVerification: EmailVerificationService,
     private readonly notifications: NotificationsService,
   ) {}
 
@@ -57,12 +55,9 @@ export class AuthService {
       passwordHash,
       username: dto.username,
       displayName: dto.displayName,
+      // Nobody proved this inbox, so Google/Apple won't auto-link to the account (see signInWithIdentity).
       emailVerified: false,
       provider: null,
-    });
-    // The account exists either way; a mail outage must not fail sign-up (they can resend).
-    await this.emailVerification.send(user.id, { enforceLimits: false }).catch((error: unknown) => {
-      this.logger.error(`Verification email to user ${user.id} failed: ${String(error)}`);
     });
     const tokens = await this.tokens.issue(user);
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
@@ -229,7 +224,7 @@ export class AuthService {
       if (!byEmail.emailVerifiedAt) {
         throw Errors.conflict(
           'ACCOUNT_EXISTS_UNVERIFIED',
-          `An account with this email already exists. Sign in with your password, verify your email, then add ${providerName(identity.provider)} in Settings → Security.`,
+          `An account with this email already exists. Sign in with your password, then add ${providerName(identity.provider)} in Settings → Security.`,
         );
       }
       if (byEmail.status !== 'ACTIVE') throw inactiveAccountError(byEmail.status);

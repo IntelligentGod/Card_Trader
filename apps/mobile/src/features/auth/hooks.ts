@@ -9,9 +9,6 @@ import { secureStorage } from '../../stores/secureStorage';
 import { useSession } from '../../stores/session';
 import { refreshMe } from './sessionActions';
 
-/** Sends the verification link again (429 RESEND_TOO_SOON / RESEND_LIMIT carry a readable message). */
-export const useResendVerification = () => useMutation({ mutationFn: api.auth.resendVerification });
-
 /** Applies a MeResponse returned by a security action (link/unlink, 2FA) everywhere. */
 export function applyMe(me: MeResponse): void {
   queryClient.setQueryData(queryKeys.me, me);

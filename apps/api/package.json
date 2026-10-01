@@ -41,7 +41,6 @@
     "class-validator": "^0.14.2",
     "helmet": "^8.1.0",
     "jose": "^5.10.0",
-    "nodemailer": "^10.0.13",
     "prisma": "^6.19.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
@@ -51,7 +50,6 @@
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.15.0",
-    "@types/nodemailer": "^8.0.2",
     "@types/supertest": "^6.0.3",
     "embedded-postgres": "17.10.0-beta.17",
     "supertest": "^7.1.1",

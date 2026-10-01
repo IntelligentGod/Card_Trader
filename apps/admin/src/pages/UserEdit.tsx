@@ -126,7 +126,6 @@ function ProfileForm({ user, onSaved }: Props) {
           onChange={setEmail}
           maxLength={254}
           required
-          hint={email.trim() !== user.email ? 'The new address becomes unverified and gets a verification link.' : undefined}
         />
         <TextField
           label="Username"

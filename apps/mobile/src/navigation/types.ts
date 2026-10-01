@@ -19,8 +19,6 @@ export type RootStackParamList = {
   Register: undefined;
   /** second sign-in step for accounts with 2FA (no session yet) */
   TwoFactorVerify: { challengeToken: string; expiresIn: number };
-  /** shown once right after sign-up */
-  VerifyEmail: undefined;
   /** forced (admin reset) when user.mustChangePassword, otherwise from Security */
   ChangePassword: undefined;
   Security: undefined;

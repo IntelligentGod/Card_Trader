@@ -9,8 +9,9 @@ import { AppConfig } from './config/app-config.service';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: false });
   configureApp(app);
-  const port = app.get(AppConfig).get('PORT');
-  await app.listen(port, '0.0.0.0');
+  const config = app.get(AppConfig);
+  const port = config.get('PORT');
+  await app.listen(port, config.get('HOST'));
   Logger.log(`API listening on http://localhost:${port}/api/v1 (docs: /docs)`, 'Bootstrap');
 }
 
