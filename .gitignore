@@ -24,5 +24,4 @@ apps/api/src/generated/
 # Local embedded Postgres data
 .pgdata/
 
-# Locally built APKs
-build-output/
+
