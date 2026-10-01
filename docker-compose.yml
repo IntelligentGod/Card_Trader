@@ -1,0 +1,50 @@
+# Local stack for machines with Docker. Without Docker, use `npm run db:start`
+# (embedded Postgres) instead — see README.
+#
+#   docker compose up -d db                # database only (use with npm run api:dev)
+#   docker compose --profile full up -d    # database + API + pricing worker
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cardtrader
+      POSTGRES_PASSWORD: cardtrader
+      POSTGRES_DB: cardtrader
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./apps/api/scripts/create-test-db.sql:/docker-entrypoint-initdb.d/create-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cardtrader']
+      interval: 5s
+      retries: 10
+
+  api:
+    profiles: ['full']
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    command: ['sh', '-c', 'npx prisma migrate deploy && node dist/main.js']
+    env_file: apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://cardtrader:cardtrader@db:5432/cardtrader?schema=public
+      STORAGE_LOCAL_DIR: /data/uploads
+    ports:
+      - '3000:3000'
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db: { condition: service_healthy }
+
+  worker:
+    profiles: ['full']
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    command: ['node', 'dist/worker.js']
+    env_file: apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://cardtrader:cardtrader@db:5432/cardtrader?schema=public
+    depends_on:
+      db: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  uploads:

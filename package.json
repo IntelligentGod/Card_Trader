@@ -1,0 +1,38 @@
+{
+  "name": "card-trader",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "postinstall": "npm run build -w @card-trader/shared",
+    "build:shared": "npm run build -w @card-trader/shared",
+    "db:start": "npm run db:start -w @card-trader/api",
+    "db:setup": "npm run db:setup -w @card-trader/api",
+    "api:dev": "npm run start:dev -w @card-trader/api",
+    "worker:dev": "npm run worker:dev -w @card-trader/api",
+    "mobile": "npm run start -w @card-trader/mobile",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e -w @card-trader/api",
+    "build:android": "npm run build:android -w @card-trader/mobile --"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "~5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "argon2@0.44.0": true,
+    "prisma@6.19.3": true,
+    "@embedded-postgres/windows-x64@17.10.0-beta.17": true,
+    "@prisma/engines@6.19.3": true
+  }
+}

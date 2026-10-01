@@ -1,0 +1,580 @@
+// Card Trader — database schema.
+// Conventions: UUID primary keys, money as integer cents, timestamps in UTC.
+// CHECK constraints and trigram indexes live in raw SQL inside migrations.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────── Enums ───────────────
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum CardCategory {
+  POKEMON
+  ONE_PIECE
+  SPORTS
+}
+
+/// Raw cards carry a user-assessed condition; RAW means "not assessed".
+enum CardCondition {
+  RAW
+  MINT
+  NEAR_MINT
+  EXCELLENT
+  VERY_GOOD
+  GOOD
+  PLAYED
+  POOR
+  GRADED
+}
+
+enum GradingCompany {
+  PSA
+  BGS
+  CGC
+  OTHER
+}
+
+/// What the owner wants to do with a card. PERSONAL cards are never shown to others.
+enum ListingStatus {
+  PERSONAL
+  FOR_TRADE
+  FOR_SALE
+  TRADE_AND_SALE
+}
+
+enum CatalogSource {
+  SEED
+  IMPORT
+  USER_SUBMITTED
+}
+
+enum ValueConfidence {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TradeStatus {
+  DRAFT
+  PROPOSED
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+  DECLINED
+}
+
+enum TradeRole {
+  INITIATOR
+  COUNTERPARTY
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum VendorApplicationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  WITHDRAWN
+}
+
+enum NotificationType {
+  TRADE_OFFER
+  TRADE_COUNTER
+  TRADE_ACCEPTED
+  TRADE_DECLINED
+  TRADE_CANCELLED
+  TRADE_TERMS_CHANGED
+  TRADE_COMPLETED
+  REVIEW_RECEIVED
+  VENDOR_APPLICATION
+  VENDOR_APPROVED
+  VENDOR_DECLINED
+  EVENT_UPDATED
+  EVENT_CANCELLED
+  EVENT_REMINDER
+}
+
+// ─────────────── Identity ───────────────
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  publicId     String     @unique @db.VarChar(16)
+  email        String     @unique @db.VarChar(254)
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  profile             Profile?
+  refreshTokens       RefreshToken[]
+  collectionItems     CollectionItem[]
+  submittedCards      Card[]              @relation("CardSubmitter")
+  tradesCreated       Trade[]             @relation("TradeCreator")
+  tradeParticipations TradeParticipant[]
+  reviewsWritten      Review[]            @relation("ReviewAuthor")
+  reviewsReceived     Review[]            @relation("ReviewSubject")
+  portfolioSnapshots  PortfolioSnapshot[]
+  vendorProfile       VendorProfile?
+  organizedEvents     Event[]             @relation("EventOrganizer")
+  vendorApplications  EventVendor[]
+  savedEvents         EventSave[]
+  notifications       Notification[]
+}
+
+model Profile {
+  userId              String   @id @db.Uuid
+  /// Unique handle, stored lowercase: [a-z0-9_]{3,20}.
+  username            String   @unique @db.VarChar(20)
+  displayName         String   @db.VarChar(40)
+  bio                 String?  @db.VarChar(280)
+  avatarKey           String?  @db.VarChar(255)
+  location            String?  @db.VarChar(80)
+  /// { instagram, x, tiktok, youtube, facebook, website } — validated by the API.
+  socialLinks         Json     @default("{}")
+  ratingSum           Int      @default(0)
+  ratingCount         Int      @default(0)
+  completedTradeCount Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Vendor Mode is a layer on top of the same account: inventory, reviews and
+/// trade history stay with the user. Switching off keeps the details for later.
+model VendorProfile {
+  userId       String   @id @db.Uuid
+  isActive     Boolean  @default(true)
+  businessName String   @db.VarChar(60)
+  logoKey      String?  @db.VarChar(255)
+  description  String?  @db.VarChar(1000)
+  website      String?  @db.VarChar(200)
+  socialLinks  Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  familyId     String    @db.Uuid
+  tokenHash    String    @unique @db.Char(64)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?   @db.Uuid
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+}
+
+// ─────────────── Catalog ───────────────
+model CardSet {
+  id           String       @id @default(uuid()) @db.Uuid
+  category     CardCategory
+  code         String       @db.VarChar(40)
+  name         String       @db.VarChar(120)
+  year         Int?
+  manufacturer String?      @db.VarChar(80)
+  releaseDate  DateTime?    @db.Date
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  cards Card[]
+
+  @@unique([category, code])
+  @@index([category, name])
+}
+
+model Card {
+  id            String        @id @default(uuid()) @db.Uuid
+  setId         String        @db.Uuid
+  /// Denormalized from CardSet (immutable) because nearly every query filters on it.
+  category      CardCategory
+  name          String        @db.VarChar(120)
+  cardNumber    String        @db.VarChar(32)
+  /// Player (sports) or character (TCG).
+  subject       String?       @db.VarChar(120)
+  /// "" means the base card; never NULL so the unique constraint holds.
+  variant       String        @default("") @db.VarChar(80)
+  rarity        String?       @db.VarChar(40)
+  imageUrl      String?       @db.VarChar(500)
+  source        CatalogSource @default(SEED)
+  externalRef   String?       @db.VarChar(120)
+  isVerified    Boolean       @default(true)
+  submittedById String?       @db.Uuid
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  set             CardSet                @relation(fields: [setId], references: [id])
+  submittedBy     User?                  @relation("CardSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  collectionItems CollectionItem[]
+  sales           CardPriceHistory[]
+  marketValues    CardMarketValue[]
+  dailyValues     CardMarketValueDaily[]
+  tradeItems      TradeItem[]
+
+  @@unique([setId, cardNumber, variant])
+  @@index([category, name])
+}
+
+// ─────────────── Collection ───────────────
+model CollectionItem {
+  id                  String          @id @default(uuid()) @db.Uuid
+  userId              String          @db.Uuid
+  cardId              String          @db.Uuid
+  quantity            Int             @default(1)
+  condition           CardCondition   @default(RAW)
+  gradingCompany      GradingCompany?
+  grade               Decimal?        @db.Decimal(3, 1)
+  certNumber          String?         @db.VarChar(40)
+  /// Derived server-side from condition/company/grade. See packages/shared price-tier.
+  priceTierKey        String          @db.VarChar(40)
+  purchasePriceCents  Int?
+  purchaseDate        DateTime?       @db.Date
+  notes               String?         @db.VarChar(1000)
+  /// Front photo.
+  customImageKey      String?         @db.VarChar(255)
+  backImageKey        String?         @db.VarChar(255)
+  listingStatus       ListingStatus   @default(PERSONAL)
+  /// Optional asking price per copy, shown for FOR_SALE / TRADE_AND_SALE.
+  askingPriceCents    Int?
+  /// Per-unit estimate cached from CardMarketValue by the pricing worker.
+  estimatedValueCents Int?
+  valueUpdatedAt      DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card           Card                 @relation(fields: [cardId], references: [id])
+  tradeItems     TradeItem[]
+  eventInventory EventInventoryItem[]
+
+  @@index([userId, listingStatus])
+  @@index([userId, createdAt])
+  @@index([cardId, priceTierKey])
+}
+
+// ─────────────── Pricing ───────────────
+model PriceSource {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique @db.VarChar(32)
+  name      String   @db.VarChar(80)
+  isEnabled Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  sales CardPriceHistory[]
+}
+
+/// One row per completed sale. Never overwritten: this is the raw history.
+model CardPriceHistory {
+  id              String          @id @default(uuid()) @db.Uuid
+  cardId          String          @db.Uuid
+  priceTierKey    String          @db.VarChar(40)
+  condition       CardCondition
+  gradingCompany  GradingCompany?
+  grade           Decimal?        @db.Decimal(3, 1)
+  /// Sale price excluding shipping.
+  priceCents      Int
+  currency        String          @default("USD") @db.Char(3)
+  soldAt          DateTime
+  sourceId        Int
+  sourceReference String          @db.VarChar(120)
+  listingTitle    String?         @db.VarChar(300)
+  matchConfidence Decimal?        @db.Decimal(3, 2)
+  isExcluded      Boolean         @default(false)
+  excludedReason  String?         @db.VarChar(80)
+  createdAt       DateTime        @default(now())
+
+  card   Card        @relation(fields: [cardId], references: [id])
+  source PriceSource @relation(fields: [sourceId], references: [id])
+
+  @@unique([sourceId, sourceReference])
+  @@index([cardId, priceTierKey, soldAt(sort: Desc)])
+}
+
+/// Current estimate per card + tier, plus refresh scheduling for the worker.
+model CardMarketValue {
+  id                  String          @id @default(uuid()) @db.Uuid
+  cardId              String          @db.Uuid
+  priceTierKey        String          @db.VarChar(40)
+  valueCents          Int?
+  confidence          ValueConfidence @default(NONE)
+  sampleSize          Int             @default(0)
+  algorithm           String?         @db.VarChar(40)
+  lastSaleAt          DateTime?
+  computedAt          DateTime?
+  nextRefreshAt       DateTime        @default(now())
+  refreshPriority     Int             @default(0)
+  consecutiveFailures Int             @default(0)
+  lockedUntil         DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  card Card @relation(fields: [cardId], references: [id])
+
+  @@unique([cardId, priceTierKey])
+  @@index([nextRefreshAt, refreshPriority])
+}
+
+/// Daily estimate per card + tier. Powers price charts and gainers/losers.
+model CardMarketValueDaily {
+  cardId       String   @db.Uuid
+  priceTierKey String   @db.VarChar(40)
+  date         DateTime @db.Date
+  valueCents   Int
+
+  card Card @relation(fields: [cardId], references: [id])
+
+  @@id([cardId, priceTierKey, date])
+}
+
+/// Daily per-category collection value per user. Powers the portfolio chart.
+model PortfolioSnapshot {
+  userId     String       @db.Uuid
+  date       DateTime     @db.Date
+  category   CardCategory
+  valueCents BigInt
+  cardCount  Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date, category])
+}
+
+// ─────────────── Trades ───────────────
+model Trade {
+  id                 String      @id @default(uuid()) @db.Uuid
+  status             TradeStatus @default(DRAFT)
+  /// Incremented on every change of terms; accept/propose must quote it.
+  version            Int         @default(1)
+  createdById        String      @db.Uuid
+  suggestedCashPayer TradeRole?
+  suggestedCashCents Int         @default(0)
+  agreedCashPayer    TradeRole?
+  agreedCashCents    Int         @default(0)
+  cashIsManual       Boolean     @default(false)
+  proposedByRole     TradeRole?
+  /// Number of offers sent so far.
+  proposalCount      Int         @default(0)
+  /// Who sent the most recent offer; unlike proposedByRole it survives edits.
+  lastProposedByRole TradeRole?
+  /// The current offer answers one from the other side.
+  isCounterOffer     Boolean     @default(false)
+  /// Card show the trade was started from, if any.
+  eventId            String?     @db.Uuid
+  cancelledByRole    TradeRole?
+  proposedAt         DateTime?
+  acceptedAt         DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  declinedAt         DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  createdBy    User               @relation("TradeCreator", fields: [createdById], references: [id])
+  event        Event?             @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  participants TradeParticipant[]
+  items        TradeItem[]
+  reviews      Review[]
+
+  @@index([status, updatedAt])
+}
+
+model TradeParticipant {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tradeId               String    @db.Uuid
+  userId                String    @db.Uuid
+  role                  TradeRole
+  itemsTotalCents       Int       @default(0)
+  acceptedVersion       Int?
+  completionConfirmedAt DateTime?
+  createdAt             DateTime  @default(now())
+
+  trade Trade       @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id])
+  items TradeItem[]
+
+  @@unique([tradeId, userId])
+  @@unique([tradeId, role])
+  @@index([userId])
+}
+
+/// A card offered by one side. Card and price fields are a snapshot,
+/// frozen when the trade is ACCEPTED so history never changes.
+model TradeItem {
+  id               String          @id @default(uuid()) @db.Uuid
+  tradeId          String          @db.Uuid
+  participantId    String          @db.Uuid
+  collectionItemId String?         @db.Uuid
+  cardId           String          @db.Uuid
+  quantity         Int             @default(1)
+  cardName         String          @db.VarChar(120)
+  setName          String          @db.VarChar(120)
+  cardNumber       String          @db.VarChar(32)
+  variant          String          @db.VarChar(80)
+  category         CardCategory
+  condition        CardCondition
+  gradingCompany   GradingCompany?
+  grade            Decimal?        @db.Decimal(3, 1)
+  certNumber       String?         @db.VarChar(40)
+  priceTierKey     String          @db.VarChar(40)
+  imageUrl         String?         @db.VarChar(500)
+  /// The comparable sales behind unitValueCents: [{ priceCents, soldAt, source }].
+  comps            Json            @default("[]")
+  unitValueCents   Int?
+  valueConfidence  ValueConfidence @default(NONE)
+  valuedAt         DateTime
+  lineTotalCents   Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  trade          Trade            @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  participant    TradeParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  collectionItem CollectionItem?  @relation(fields: [collectionItemId], references: [id], onDelete: SetNull)
+  card           Card             @relation(fields: [cardId], references: [id])
+
+  @@unique([tradeId, collectionItemId])
+  @@index([participantId])
+  @@index([collectionItemId])
+}
+
+// ─────────────── Reviews ───────────────
+model Review {
+  id             String   @id @default(uuid()) @db.Uuid
+  tradeId        String   @db.Uuid
+  reviewerId     String   @db.Uuid
+  reviewedUserId String   @db.Uuid
+  rating         Int      @db.SmallInt
+  comment        String?  @db.VarChar(1000)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  trade        Trade @relation(fields: [tradeId], references: [id])
+  reviewer     User  @relation("ReviewAuthor", fields: [reviewerId], references: [id])
+  reviewedUser User  @relation("ReviewSubject", fields: [reviewedUserId], references: [id])
+
+  @@unique([tradeId, reviewerId])
+  @@index([reviewedUserId, createdAt(sort: Desc)])
+}
+
+// ─────────────── Events (card shows) ───────────────
+/// Any user can organize: the creator is the organizer.
+model Event {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizerId    String      @db.Uuid
+  title          String      @db.VarChar(120)
+  description    String?     @db.VarChar(4000)
+  startsAt       DateTime
+  endsAt         DateTime
+  venueName      String      @db.VarChar(120)
+  address        String?     @db.VarChar(200)
+  city           String      @db.VarChar(80)
+  region         String?     @db.VarChar(80)
+  country        String      @default("US") @db.VarChar(56)
+  /// Free text, e.g. "$10 · Kids under 12 free".
+  admission      String?     @db.VarChar(120)
+  /// Shown instead of the organizer's display name when set (e.g. a company).
+  organizerName  String?     @db.VarChar(80)
+  website        String?     @db.VarChar(200)
+  socialLinks    Json        @default("{}")
+  status         EventStatus @default(DRAFT)
+  publishedAt    DateTime?
+  cancelledAt    DateTime?
+  reminderSentAt DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organizer User          @relation("EventOrganizer", fields: [organizerId], references: [id])
+  vendors   EventVendor[]
+  saves     EventSave[]
+  trades    Trade[]
+
+  @@index([status, startsAt])
+  @@index([organizerId, startsAt])
+}
+
+/// A vendor's application to an event; once APPROVED it carries the table number.
+model EventVendor {
+  id          String                  @id @default(uuid()) @db.Uuid
+  eventId     String                  @db.Uuid
+  vendorId    String                  @db.Uuid
+  status      VendorApplicationStatus @default(PENDING)
+  tableNumber String?                 @db.VarChar(20)
+  message     String?                 @db.VarChar(500)
+  decidedAt   DateTime?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  event     Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendor    User                 @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  inventory EventInventoryItem[]
+
+  @@unique([eventId, vendorId])
+  @@unique([eventId, tableNumber])
+  @@index([vendorId, status])
+  @@index([eventId, status])
+}
+
+/// "Bringing to this event": a pointer into the vendor's existing inventory.
+model EventInventoryItem {
+  eventVendorId    String   @db.Uuid
+  collectionItemId String   @db.Uuid
+  createdAt        DateTime @default(now())
+
+  eventVendor    EventVendor    @relation(fields: [eventVendorId], references: [id], onDelete: Cascade)
+  collectionItem CollectionItem @relation(fields: [collectionItemId], references: [id], onDelete: Cascade)
+
+  @@id([eventVendorId, collectionItemId])
+  @@index([collectionItemId])
+}
+
+/// Attendee "Interested" flag: drives event-update and reminder notifications.
+model EventSave {
+  userId    String   @db.Uuid
+  eventId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([userId, eventId])
+  @@index([eventId])
+}
+
+// ─────────────── Notifications ───────────────
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(120)
+  body      String           @db.VarChar(300)
+  /// Navigation target: { tradeId } | { eventId } | { publicId }.
+  data      Json             @default("{}")
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+}
