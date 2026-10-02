@@ -4,6 +4,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { TradeListItem } from '@card-trader/shared';
+import { queryKeys } from '../../../api/queryKeys';
+import { useRefreshOnFocus } from '../../../api/useRefreshOnFocus';
 import { AppText } from '../../../components/AppText';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
@@ -52,7 +54,10 @@ function TradeList({ scope }: { scope: 'active' | 'history' }) {
   );
 }
 
+const REFRESH_ON_FOCUS = [queryKeys.trades];
+
 export function ActiveTradesScreen({ navigation }: TabScreenProps<'Trade'>) {
+  useRefreshOnFocus(REFRESH_ON_FOCUS);
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <View style={styles.header}>

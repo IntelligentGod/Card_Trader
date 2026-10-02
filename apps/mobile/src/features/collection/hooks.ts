@@ -3,13 +3,15 @@ import type { CreateCollectionItemRequest, UpdateCollectionItemRequest, ValueRan
 import { api, type CollectionFilters } from '../../api/endpoints';
 import { queryKeys } from '../../api/queryKeys';
 
-/** Collection changes affect portfolio totals and any trade that includes the card. */
-export function invalidateCollection(client: QueryClient): Promise<unknown> {
-  return Promise.all([
-    client.invalidateQueries({ queryKey: queryKeys.collection }),
-    client.invalidateQueries({ queryKey: queryKeys.portfolio }),
-    client.invalidateQueries({ queryKey: queryKeys.trades }),
-  ]);
+/**
+ * Anything that changes what a user owns or lists (add/edit/remove a card, a completed trade,
+ * event inventory) affects the collection, the dashboard totals, open trades and the public
+ * profile's listings. Fire-and-forget: callers must not wait for every screen to refetch.
+ */
+export function invalidateCollection(client: QueryClient): void {
+  for (const queryKey of [queryKeys.collection, queryKeys.portfolio, queryKeys.trades, ['users']]) {
+    void client.invalidateQueries({ queryKey });
+  }
 }
 
 export const useCollectionList = (filters: CollectionFilters) =>
@@ -47,7 +49,7 @@ export function useUpdateItem(id: string) {
     mutationFn: (body: UpdateCollectionItemRequest) => api.collection.update(id, body),
     onSuccess: (item) => {
       client.setQueryData(queryKeys.collectionItem(id), item);
-      return invalidateCollection(client);
+      invalidateCollection(client);
     },
   });
 }
@@ -58,7 +60,7 @@ export function useDeleteItem(id: string) {
     mutationFn: () => api.collection.remove(id),
     onSuccess: () => {
       client.removeQueries({ queryKey: queryKeys.collectionItem(id) });
-      return invalidateCollection(client);
+      invalidateCollection(client);
     },
   });
 }

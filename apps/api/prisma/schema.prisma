@@ -143,6 +143,8 @@ model User {
   emailVerifiedAt          DateTime?
   /// set by an admin password reset: every endpoint except changing the password is refused
   mustChangePassword       Boolean   @default(false)
+  /// Invisible in the admin console to every other admin, including super admins (the owner account).
+  hiddenFromAdmins         Boolean   @default(false)
   /// access tokens issued before this are rejected
   passwordChangedAt        DateTime?
   lastLoginAt              DateTime?

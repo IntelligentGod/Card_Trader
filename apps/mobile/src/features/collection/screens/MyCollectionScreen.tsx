@@ -12,6 +12,8 @@ import {
   type CollectionSort,
   type ListingStatus,
 } from '@card-trader/shared';
+import { queryKeys } from '../../../api/queryKeys';
+import { useRefreshOnFocus } from '../../../api/useRefreshOnFocus';
 import { AppText } from '../../../components/AppText';
 import { CardRow } from '../../../components/CardRow';
 import { ChipRow, TextField } from '../../../components/Controls';
@@ -33,7 +35,10 @@ const SORTS: { value: CollectionSort; label: string }[] = [
 const CATEGORY_OPTIONS = CARD_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main }));
 const STATUS_OPTIONS = LISTING_STATUSES.map((s) => ({ value: s, label: LISTING_STATUS_LABELS[s] }));
 
+const REFRESH_ON_FOCUS = [queryKeys.collection, queryKeys.portfolio];
+
 export function MyCollectionScreen({ navigation }: TabScreenProps<'Inventory'>) {
+  useRefreshOnFocus(REFRESH_ON_FOCUS);
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
   const [category, setCategory] = useState<CardCategory | undefined>();

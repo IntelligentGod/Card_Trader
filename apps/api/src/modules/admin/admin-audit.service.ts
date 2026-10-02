@@ -3,7 +3,7 @@ import type { AdminTargetType, Prisma } from '@prisma/client';
 import type { AdminAuditEntry, Paginated } from '@card-trader/shared';
 import { pageArgs, toPage, type CursorQueryDto } from '../../common/pagination/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
-import type { Actor } from './admin-policy';
+import { isVisibleTo, type Actor } from './admin-policy';
 
 type Db = Prisma.TransactionClient | PrismaService;
 export type FieldChanges = Record<string, { from: unknown; to: unknown }>;
@@ -14,7 +14,7 @@ const HISTORY_LIMIT = 100;
 export const SYSTEM_TARGET_ID = '00000000-0000-0000-0000-000000000000';
 
 const auditInclude = {
-  admin: { select: { publicId: true, email: true, role: true, profile: { select: { displayName: true } } } },
+  admin: { select: { id: true, publicId: true, email: true, role: true, hiddenFromAdmins: true, profile: { select: { displayName: true } } } },
 } satisfies Prisma.AdminAuditLogInclude;
 type AuditRow = Prisma.AdminAuditLogGetPayload<{ include: typeof auditInclude }>;
 
@@ -80,8 +80,9 @@ export class AdminAuditService {
   }
 
   /**
-   * Normal admins never learn who the super admin is: actions taken by a super
-   * admin show as "Administrator", and IP addresses stay hidden.
+   * Hidden accounts stay hidden here too (see visibleAccounts): actions taken by an
+   * admin the viewer can't see show as "Administrator", such targets show no name,
+   * and only super admins see IP addresses.
    */
   private async toEntries(viewer: Actor, rows: AuditRow[]): Promise<AdminAuditEntry[]> {
     const isSuper = viewer.role === 'SUPER_ADMIN';
@@ -89,13 +90,13 @@ export class AdminAuditService {
     const targets = userTargetIds.length
       ? await this.prisma.user.findMany({
           where: { id: { in: userTargetIds } },
-          select: { id: true, publicId: true, role: true, profile: { select: { displayName: true } } },
+          select: { id: true, publicId: true, role: true, hiddenFromAdmins: true, profile: { select: { displayName: true } } },
         })
       : [];
     const targetById = new Map(targets.map((t) => [t.id, t]));
 
     return rows.map((row) => {
-      const hideActor = !isSuper && row.admin.role === 'SUPER_ADMIN';
+      const hideActor = !isVisibleTo(viewer, row.admin);
       const target = row.targetType === 'USER' ? targetById.get(row.targetId) : undefined;
       return {
         id: row.id,
@@ -108,7 +109,7 @@ export class AdminAuditService {
           ? { publicId: null, email: null, displayName: 'Administrator' }
           : { publicId: row.admin.publicId, email: row.admin.email, displayName: row.admin.profile?.displayName ?? 'Admin' },
         target:
-          target && (isSuper || target.role !== 'SUPER_ADMIN')
+          target && isVisibleTo(viewer, target)
             ? { publicId: target.publicId, displayName: target.profile?.displayName ?? 'Collector' }
             : null,
         ipAddress: isSuper ? row.ipAddress : null,

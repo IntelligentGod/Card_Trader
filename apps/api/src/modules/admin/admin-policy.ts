@@ -7,12 +7,23 @@ export interface Actor {
 }
 
 /**
- * The super admin is invisible to normal admins: every admin query that can
- * return or count accounts goes through this filter, so it never appears in
- * lists, search, counts or direct lookups (those answer 404 like an unknown id).
+ * Every admin query that can return or count accounts goes through this filter,
+ * so a hidden account never appears in lists, search, counts or direct lookups
+ * (those answer 404 like an unknown id):
+ *   - super admins are invisible to normal admins;
+ *   - accounts marked `hiddenFromAdmins` (the owner) are invisible to everyone but themselves,
+ *     other super admins included.
  */
 export function visibleAccounts(viewer: Actor): Prisma.UserWhereInput {
-  return viewer.role === 'SUPER_ADMIN' ? {} : { role: { not: 'SUPER_ADMIN' } };
+  const notHidden: Prisma.UserWhereInput = { OR: [{ hiddenFromAdmins: false }, { id: viewer.userId }] };
+  return viewer.role === 'SUPER_ADMIN' ? notHidden : { AND: [{ role: { not: 'SUPER_ADMIN' } }, notHidden] };
+}
+
+/** Same rule for a single account already loaded (audit actors and targets). */
+export function isVisibleTo(viewer: Actor, account: { id: string; role: UserRole; hiddenFromAdmins: boolean }): boolean {
+  if (account.id === viewer.userId) return true;
+  if (account.hiddenFromAdmins) return false;
+  return viewer.role === 'SUPER_ADMIN' || account.role !== 'SUPER_ADMIN';
 }
 
 /**

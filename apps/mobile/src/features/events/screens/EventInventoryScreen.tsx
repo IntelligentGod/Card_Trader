@@ -15,7 +15,7 @@ import { EmptyState, ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
 import { colors, spacing } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
-import { useCollectionList } from '../../collection/hooks';
+import { invalidateCollection, useCollectionList } from '../../collection/hooks';
 
 /**
  * Approved vendors pick which of their EXISTING cards they bring. Only cards
@@ -43,7 +43,7 @@ export function EventInventoryScreen({ route, navigation }: RootScreenProps<'Eve
     onSuccess: (result) => {
       client.setQueryData(queryKeys.eventMyInventory(eventId), result);
       void client.invalidateQueries({ queryKey: queryKeys.event(eventId) });
-      void client.invalidateQueries({ queryKey: queryKeys.collection });
+      invalidateCollection(client);
       navigation.goBack();
     },
   });

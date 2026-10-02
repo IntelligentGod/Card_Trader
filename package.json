@@ -35,5 +35,10 @@
     "prisma@6.19.3": true,
     "@embedded-postgres/windows-x64@17.10.0-beta.17": true,
     "@prisma/engines@6.19.3": true
+  },
+  "dependencies": {
+    "expo": "~57.0.26",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
   }
 }

@@ -1,4 +1,4 @@
-import { permissionsFor, visibleAccounts } from './admin-policy';
+import { isVisibleTo, permissionsFor, visibleAccounts } from './admin-policy';
 
 const superAdmin = { userId: 'super', role: 'SUPER_ADMIN' as const };
 const admin = { userId: 'admin', role: 'ADMIN' as const };
@@ -34,8 +34,25 @@ describe('permissionsFor', () => {
 });
 
 describe('visibleAccounts', () => {
-  it('hides the super admin from admins only', () => {
-    expect(visibleAccounts(admin)).toEqual({ role: { not: 'SUPER_ADMIN' } });
-    expect(visibleAccounts(superAdmin)).toEqual({});
+  it('hides the super admin from admins only, and hidden accounts from everyone but themselves', () => {
+    const notHidden = (userId: string) => ({ OR: [{ hiddenFromAdmins: false }, { id: userId }] });
+    expect(visibleAccounts(admin)).toEqual({ AND: [{ role: { not: 'SUPER_ADMIN' } }, notHidden('admin')] });
+    expect(visibleAccounts(superAdmin)).toEqual(notHidden('super'));
+  });
+});
+
+describe('isVisibleTo', () => {
+  const account = (id: string, role: 'USER' | 'ADMIN' | 'SUPER_ADMIN', hiddenFromAdmins = false) => ({ id, role, hiddenFromAdmins });
+
+  it('applies the same rule to a loaded account', () => {
+    expect(isVisibleTo(admin, account('u', 'USER'))).toBe(true);
+    expect(isVisibleTo(admin, account('s', 'SUPER_ADMIN'))).toBe(false);
+    expect(isVisibleTo(superAdmin, account('s2', 'SUPER_ADMIN'))).toBe(true);
+    expect(isVisibleTo(superAdmin, account('owner', 'SUPER_ADMIN', true))).toBe(false);
+    expect(isVisibleTo(admin, account('owner', 'SUPER_ADMIN', true))).toBe(false);
+  });
+
+  it('always shows an account to itself', () => {
+    expect(isVisibleTo(superAdmin, account('super', 'SUPER_ADMIN', true))).toBe(true);
   });
 });

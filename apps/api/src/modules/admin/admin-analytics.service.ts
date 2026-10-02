@@ -71,7 +71,8 @@ export class AdminAnalyticsService {
       this.prisma.vendorProfile.count({ where: { isActive: true } }),
       this.prisma.$queryRaw<MonthRow[]>`
         SELECT to_char(date_trunc('month', "createdAt"), 'YYYY-MM') AS month, COUNT(*) AS count
-        FROM "User" WHERE "createdAt" >= ${since} ${hideSuper ? Prisma.sql`AND "role" <> 'SUPER_ADMIN'` : Prisma.empty} GROUP BY 1`,
+        FROM "User" WHERE "createdAt" >= ${since} ${hideSuper ? Prisma.sql`AND "role" <> 'SUPER_ADMIN'` : Prisma.empty}
+          AND (NOT "hiddenFromAdmins" OR "id" = ${viewer.userId}::uuid) GROUP BY 1`,
       this.prisma.$queryRaw<{ category: CardCategory; items: bigint; cards: bigint | null; value: bigint | null }[]>`
         SELECT c."category" AS category, COUNT(*) AS items, SUM(ci."quantity") AS cards,
                SUM(COALESCE(ci."estimatedValueCents", 0)::bigint * ci."quantity") AS value

@@ -6,6 +6,8 @@
  *   npm run admin:super -w @card-trader/api -- someone@example.com    # SUPER_ADMIN
  *   npm run admin:revoke -w @card-trader/api -- someone@example.com   # back to USER
  *   npm run admin:list -w @card-trader/api
+ *   npm run admin:hide -w @card-trader/api -- owner@example.com      # invisible to every other admin
+ *   npm run admin:unhide -w @card-trader/api -- owner@example.com
  *
  * Reads DATABASE_URL from apps/api/.env (Prisma loads it automatically).
  */
@@ -18,25 +20,31 @@ async function main() {
   if (command === 'list') {
     const admins = await prisma.user.findMany({
       where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
-      select: { email: true, role: true, status: true, profile: { select: { displayName: true } } },
+      select: { email: true, role: true, status: true, hiddenFromAdmins: true, profile: { select: { displayName: true } } },
       orderBy: { createdAt: 'asc' },
     });
     if (admins.length === 0) console.log('No admins yet.');
-    for (const a of admins) console.log(`${a.role.padEnd(11)} ${a.email}  (${a.profile?.displayName ?? '-'}, ${a.status})`);
+    for (const a of admins) console.log(`${a.role.padEnd(11)} ${a.email}  (${a.profile?.displayName ?? '-'}, ${a.status}${a.hiddenFromAdmins ? ', hidden' : ''})`);
     return;
   }
 
-  if (!['grant', 'super', 'revoke'].includes(command) || !rawEmail) {
-    console.error('Usage: set-admin.mjs grant|super|revoke <email>   or   set-admin.mjs list');
+  if (!['grant', 'super', 'revoke', 'hide', 'unhide'].includes(command) || !rawEmail) {
+    console.error('Usage: set-admin.mjs grant|super|revoke|hide|unhide <email>   or   set-admin.mjs list');
     process.exitCode = 1;
     return;
   }
 
   const email = rawEmail.trim().toLowerCase();
-  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true } });
+  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true, hiddenFromAdmins: true } });
   if (!user) {
     console.error(`No user with email ${email}. They need to sign up first.`);
     process.exitCode = 1;
+    return;
+  }
+  if (command === 'hide' || command === 'unhide') {
+    const hiddenFromAdmins = command === 'hide';
+    if (user.hiddenFromAdmins !== hiddenFromAdmins) await prisma.user.update({ where: { id: user.id }, data: { hiddenFromAdmins } });
+    console.log(`${email} is now ${hiddenFromAdmins ? 'hidden from' : 'visible to'} other admins in the admin console.`);
     return;
   }
   const role = command === 'grant' ? 'ADMIN' : command === 'super' ? 'SUPER_ADMIN' : 'USER';

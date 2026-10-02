@@ -21,6 +21,7 @@ export class ApiError extends Error {
 
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === 'TIMEOUT') return 'The server took too long to answer. Check your connection and try again.';
     if (error.isNetwork) return "Can't reach the server. Check your connection.";
     if (error.code === 'VALIDATION_FAILED' && Array.isArray(error.details) && error.details.length > 0) {
       return String(error.details[0]);
@@ -42,6 +43,35 @@ interface RequestOptions {
 }
 
 const REFRESH_MARGIN_MS = 30_000;
+/**
+ * React Native's HTTP client never times out on its own: a connection that drops mid-request
+ * leaves the promise (and any spinner waiting on it) pending forever.
+ */
+const REQUEST_TIMEOUT_MS = 30_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+/** fetch() that fails with a TIMEOUT ApiError after `timeoutMs`; a caller's own abort still throws AbortError. */
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number, signal?: AbortSignal): Promise<Response> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  const forwardAbort = () => controller.abort();
+  signal?.addEventListener('abort', forwardAbort);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (timedOut) throw new ApiError(0, 'TIMEOUT', 'Request timed out');
+    if (error instanceof Error && error.name === 'AbortError') throw error;
+    throw new ApiError(0, 'NETWORK_ERROR', 'Network request failed');
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', forwardAbort);
+  }
+}
+
 let refreshInFlight: Promise<string | null> | null = null;
 
 /** 403 codes after which the session is over (an admin blocked or disabled the account). */
@@ -82,16 +112,15 @@ export function refreshAccessToken(): Promise<string | null> {
     refreshInFlight = (async () => {
       const refreshToken = await secureStorage.getRefreshToken();
       if (!refreshToken) return null;
-      let response: Response;
-      try {
-        response = await fetch(`${API_URL}/auth/refresh`, {
+      const response = await fetchWithTimeout(
+        `${API_URL}/auth/refresh`,
+        {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({ refreshToken }),
-        });
-      } catch {
-        throw new ApiError(0, 'NETWORK_ERROR', 'Network request failed');
-      }
+        },
+        REQUEST_TIMEOUT_MS,
+      );
       if (response.status === 401) {
         await secureStorage.clear();
         useSession.getState().setSignedOut();
@@ -134,21 +163,16 @@ async function toApiError(response: Response): Promise<ApiError> {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, form, auth = true, signal } = options;
 
-  const send = async (token: string | null): Promise<Response> => {
+  const send = (token: string | null): Promise<Response> => {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (token) headers.Authorization = `Bearer ${token}`;
-    try {
-      return await fetch(`${API_URL}${path}`, {
-        method,
-        headers,
-        body: form ?? (body === undefined ? undefined : JSON.stringify(body)),
-        signal,
-      });
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') throw error;
-      throw new ApiError(0, 'NETWORK_ERROR', 'Network request failed');
-    }
+    return fetchWithTimeout(
+      `${API_URL}${path}`,
+      { method, headers, body: form ?? (body === undefined ? undefined : JSON.stringify(body)) },
+      form ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS,
+      signal,
+    );
   };
 
   let token = auth ? await validAccessToken() : null;

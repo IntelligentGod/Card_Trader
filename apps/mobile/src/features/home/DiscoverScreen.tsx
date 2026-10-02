@@ -15,6 +15,7 @@ import {
 } from '@card-trader/shared';
 import { api } from '../../api/endpoints';
 import { queryKeys } from '../../api/queryKeys';
+import { useRefreshOnFocus } from '../../api/useRefreshOnFocus';
 import { AppText } from '../../components/AppText';
 import { CardArt } from '../../components/CardArt';
 import { Avatar } from '../../components/Profile';
@@ -42,11 +43,15 @@ const RANGE_TITLES: Record<ValueRange, string> = {
   '1y': 'Last year',
 };
 
+/** Dashboard totals change after trades, edits and price updates made elsewhere. */
+const REFRESH_ON_FOCUS = [queryKeys.portfolio, queryKeys.trades, queryKeys.events];
+
 /**
  * Discover: what's happening now — the portfolio at a glance, quick actions,
  * upcoming card shows, value over time, top cards and open trades.
  */
 export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
+  useRefreshOnFocus(REFRESH_ON_FOCUS);
   const user = useSession((s) => s.user);
   const unread = useUnreadCount();
   const [range, setRange] = useState<ValueRange>('30d');
