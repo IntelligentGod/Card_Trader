@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import type { TwoFactorProofRequest } from '@card-trader/shared';
 import { ApiError, errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
@@ -9,12 +9,14 @@ import { Button } from '../../../components/Button';
 import { Screen } from '../../../components/Screen';
 import type { RootScreenProps } from '../../../navigation/types';
 import { useAuthNotice } from '../../../stores/authNotice';
-import { colors, spacing } from '../../../theme';
+import { makeStyles, spacing, useTheme } from '../../../theme';
 import { TwoFactorCodeForm } from '../components/TwoFactorCodeForm';
 import { completeSignIn } from '../sessionActions';
 
 /** Second step of signing in when the account has two-factor authentication. */
 export function TwoFactorVerifyScreen({ route, navigation }: RootScreenProps<'TwoFactorVerify'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { challengeToken } = route.params;
 
   const verify = useMutation({
@@ -52,7 +54,7 @@ export function TwoFactorVerifyScreen({ route, navigation }: RootScreenProps<'Tw
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center' },
   header: { gap: spacing.sm, marginBottom: spacing.sm },
@@ -65,4 +67,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-});
+}));

@@ -7,12 +7,13 @@ import { TextField } from '../../components/Controls';
 import { Screen } from '../../components/Screen';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { validateBroadcast } from './adminForm';
 import { useAdminBroadcast } from './hooks';
 
 /** SUPER_ADMIN: an announcement notification to every active user. */
 export function AdminBroadcastScreen({ navigation }: RootScreenProps<'AdminBroadcast'>) {
+  const { colors } = useTheme();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [touched, setTouched] = useState(false);

@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
+import { View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 import { formatCents, type ValuePoint } from '@card-trader/shared';
 import { AppText } from '../../../components/AppText';
-import { colors, radius, shadow, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 
 const AXIS_WIDTH = 46;
 const PAD_TOP = 34; // room for the callout above the last point
@@ -50,6 +50,8 @@ function longDate(date: string): string {
  * latest value called out at the end of the line, and touch scrubbing.
  */
 export function ValueChart({ points, height = 170 }: { points: readonly ValuePoint[]; height?: number }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
   const plotWidth = Math.max(0, width - AXIS_WIDTH);
@@ -166,7 +168,7 @@ export function ValueChart({ points, height = 170 }: { points: readonly ValuePoi
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadow }) => ({
   empty: { alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row' },
   yLabel: { position: 'absolute', left: 0, fontSize: 11 },
@@ -184,4 +186,4 @@ const styles = StyleSheet.create({
   },
   calloutValue: { fontWeight: '800' },
   calloutDate: { fontSize: 11 },
-});
+}));

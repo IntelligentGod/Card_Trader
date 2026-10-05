@@ -1,7 +1,7 @@
 import { memo, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import type { CardCategory } from '@card-trader/shared';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, radius, spacing, useTheme } from '../theme';
 import { AppText } from './AppText';
 import { CardArt } from './CardArt';
 import { PriceText } from './PriceText';
@@ -36,6 +36,8 @@ export const CardRow = memo(function CardRow({
   onPress,
   testID,
 }: CardRowProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <Pressable
       testID={testID}
@@ -73,7 +75,7 @@ export const CardRow = memo(function CardRow({
   );
 });
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -91,4 +93,4 @@ const styles = StyleSheet.create({
   tag: { backgroundColor: colors.primarySoft, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 1 },
   tagText: { fontWeight: '600' },
   trailing: { alignItems: 'flex-end', gap: spacing.xs },
-});
+}));

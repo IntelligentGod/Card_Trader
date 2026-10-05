@@ -7,7 +7,7 @@ import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootScreenProps, RootStackParamList } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import {
   notificationTarget,
   RECENT_NOTIFICATIONS,
@@ -32,6 +32,7 @@ export function useOpenNotification(navigation: Navigation) {
 
 /** "Mark all as read" in the header while anything is unread. */
 export function useMarkAllHeader(navigation: Navigation) {
+  const { colors } = useTheme();
   const unread = useUnreadCount().data?.count ?? 0;
   const markAll = useMarkAllNotificationsRead();
   const { mutate, isPending } = markAll;
@@ -51,6 +52,7 @@ export function useMarkAllHeader(navigation: Navigation) {
 
 /** The latest few notifications; the full list is one tap away. */
 export function NotificationsScreen({ navigation }: RootScreenProps<'Notifications'>) {
+  const { colors } = useTheme();
   const recent = useRecentNotifications();
   const open = useOpenNotification(navigation);
   useMarkAllHeader(navigation);

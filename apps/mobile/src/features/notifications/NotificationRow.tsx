@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import type { NotificationResponse, NotificationType } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { formatRelative } from '../../utils/format';
 
 export const NOTIFICATION_ICONS: Record<NotificationType, keyof typeof Ionicons.glyphMap> = {
@@ -26,6 +26,8 @@ export const NOTIFICATION_ICONS: Record<NotificationType, keyof typeof Ionicons.
 
 /** One notification in the recent list and the full history. Unread rows get an accent bar and a filled icon. */
 export function NotificationRow({ notification, onPress }: { notification: NotificationResponse; onPress: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const unread = !notification.isRead;
   return (
     <Pressable
@@ -36,7 +38,7 @@ export function NotificationRow({ notification, onPress }: { notification: Notif
       testID={`notification-${notification.id}`}
     >
       <View style={[styles.icon, unread && styles.iconUnread]}>
-        <Ionicons name={NOTIFICATION_ICONS[notification.type] ?? 'notifications'} size={20} color={unread ? colors.white : colors.primary} />
+        <Ionicons name={NOTIFICATION_ICONS[notification.type] ?? 'notifications'} size={20} color={unread ? colors.onPrimary : colors.primary} />
       </View>
       <View style={styles.body}>
         <View style={styles.titleRow}>
@@ -53,7 +55,7 @@ export function NotificationRow({ notification, onPress }: { notification: Notif
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   row: { flexDirection: 'row', gap: spacing.md, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.surface },
   unread: { borderLeftWidth: 3, borderLeftColor: colors.primary },
   pressed: { opacity: 0.85 },
@@ -62,4 +64,4 @@ const styles = StyleSheet.create({
   body: { flex: 1, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   flex: { flex: 1 },
-});
+}));

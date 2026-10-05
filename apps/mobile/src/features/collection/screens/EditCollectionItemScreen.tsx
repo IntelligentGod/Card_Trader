@@ -1,13 +1,15 @@
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { AppText } from '../../../components/AppText';
 import { SkeletonBlock } from '../../../components/Skeleton';
 import { ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { makeStyles, spacing, useTheme } from '../../../theme';
 import { CollectionItemForm } from '../components/CollectionItemForm';
 import { useCollectionItem, useUpdateItem } from '../hooks';
 
 export function EditCollectionItemScreen({ route, navigation }: RootScreenProps<'EditCollectionItem'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { itemId } = route.params;
   const item = useCollectionItem(itemId);
   const update = useUpdateItem(itemId);
@@ -50,7 +52,7 @@ export function EditCollectionItemScreen({ route, navigation }: RootScreenProps<
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl, backgroundColor: colors.background },
-});
+}));

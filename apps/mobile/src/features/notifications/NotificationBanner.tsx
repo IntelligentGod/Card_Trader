@@ -7,7 +7,7 @@ import { api } from '../../api/endpoints';
 import { AppText } from '../../components/AppText';
 import { navigationRef } from '../../navigation/deepLinks';
 import { useSession } from '../../stores/session';
-import { colors, radius, shadow, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { advanceBanner, BANNER_DURATION_MS, EMPTY_BANNER_QUEUE, enqueueBanner } from './bannerQueue';
 import { notificationTarget, syncAfterRead } from './hooks';
 import { NOTIFICATION_ICONS } from './NotificationRow';
@@ -22,6 +22,8 @@ const HIDDEN_Y = -220;
  * after a few seconds and the next queued one slides in.
  */
 export function NotificationBanner() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const status = useSession((s) => s.status);
   const forcedPasswordChange = useSession((s) => !!s.user?.mustChangePassword);
   const enabled = status === 'signedIn' && !forcedPasswordChange;
@@ -110,7 +112,7 @@ export function NotificationBanner() {
           accessibilityHint="Opens the notification"
         >
           <View style={styles.icon}>
-            <Ionicons name={NOTIFICATION_ICONS[current.type] ?? 'notifications'} size={18} color={colors.white} />
+            <Ionicons name={NOTIFICATION_ICONS[current.type] ?? 'notifications'} size={18} color={colors.onPrimary} />
           </View>
           <View style={styles.text}>
             <AppText variant="bodyStrong" numberOfLines={1}>
@@ -138,7 +140,7 @@ export function NotificationBanner() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadow }) => ({
   banner: {
     position: 'absolute',
     left: spacing.md,
@@ -158,4 +160,4 @@ const styles = StyleSheet.create({
   icon: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, gap: 1 },
   close: { padding: spacing.md },
-});
+}));

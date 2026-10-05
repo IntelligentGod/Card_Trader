@@ -1,15 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, Share, StyleSheet, View } from 'react-native';
+import { Platform, Share, View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
 import { Screen } from '../../components/Screen';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { recoveryCodesText } from '../auth/twoFactor';
 
 /** The 10 recovery codes, shown once (the server keeps only hashes). Leaving needs an explicit confirmation. */
 export function RecoveryCodesScreen({ route, navigation }: RootScreenProps<'RecoveryCodes'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { codes } = route.params;
 
   return (
@@ -47,7 +49,7 @@ export function RecoveryCodesScreen({ route, navigation }: RootScreenProps<'Reco
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   notice: {
     flexDirection: 'row',
@@ -61,4 +63,4 @@ const styles = StyleSheet.create({
   cell: { width: '50%', flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs },
   index: { width: 22, textAlign: 'right' },
   code: { fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }) },
-});
+}));

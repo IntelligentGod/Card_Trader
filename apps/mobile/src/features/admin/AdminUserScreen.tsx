@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import {
   formatCents,
   type AdminAuditEntry,
@@ -24,7 +24,7 @@ import { EmptyState, ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import { mediaUrl } from '../../config';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { cardSubtitle, formatDateLong, formatRelative } from '../../utils/format';
 import { EVENT_STATUS_LABELS, eventRelationText, gradeText } from './adminText';
 import { AccountActions, AccountSection } from './AdminUserAccount';
@@ -45,6 +45,8 @@ type Row =
   | { kind: 'audit'; key: string; entry: AdminAuditEntry };
 
 function UserHeader({ user }: { user: AdminUserDetail }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const vendor = user.vendor;
   return (
     <View style={styles.headerBlocks}>
@@ -126,6 +128,8 @@ const TABS: { value: Tab; label: string }[] = [
 ];
 
 export function AdminUserScreen({ route, navigation }: RootScreenProps<'AdminUser'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { publicId } = route.params;
   const [tab, setTab] = useState<Tab>('collection');
   const detail = useAdminUser(publicId);
@@ -311,7 +315,7 @@ export function AdminUserScreen({ route, navigation }: RootScreenProps<'AdminUse
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
   header: { gap: spacing.lg, marginBottom: spacing.md },
@@ -327,4 +331,4 @@ const styles = StyleSheet.create({
   reviewCaption: { marginBottom: spacing.xs },
   event: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md },
   pressed: { opacity: 0.85 },
-});
+}));

@@ -21,7 +21,7 @@ import { ListingBadge } from '../../components/ListingBadge';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import type { RootScreenProps } from '../../navigation/types';
-import { categoryColors, colors, spacing } from '../../theme';
+import { makeStyles, spacing, useTheme } from '../../theme';
 import { cardSubtitle } from '../../utils/format';
 import { useStartTrade } from '../trades/useStartTrade';
 
@@ -40,6 +40,8 @@ const SORTS: { value: CollectionSort; label: string }[] = [
 ];
 
 export function OtherUserCollectionScreen({ route, navigation }: RootScreenProps<'OtherUserCollection'>) {
+  const styles = useStyles();
+  const { categoryColors, colors } = useTheme();
   const { publicId } = route.params;
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
@@ -151,10 +153,10 @@ export function OtherUserCollectionScreen({ route, navigation }: RootScreenProps
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, gap: spacing.sm },
   trailing: { alignItems: 'flex-end', gap: spacing.xs },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
   footer: { padding: spacing.lg, gap: spacing.sm, backgroundColor: colors.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-});
+}));

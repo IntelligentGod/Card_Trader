@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { formatCents, TRADE_STATUS_LABELS } from '@card-trader/shared';
 import { errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
@@ -11,7 +11,7 @@ import { SkeletonBlock } from '../../../components/Skeleton';
 import { ErrorState } from '../../../components/States';
 import { Surface } from '../../../components/Surface';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { formatDateLong } from '../../../utils/format';
 import { CashSummary } from '../components/CashSummary';
 import { TradeSide } from '../components/TradeSide';
@@ -19,6 +19,8 @@ import { useTrade, useTradeAction } from '../hooks';
 import { sidesFor, statusHeadline } from '../tradeText';
 
 export function TradeConfirmationScreen({ route, navigation }: RootScreenProps<'TradeConfirmation'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { tradeId } = route.params;
   const trade = useTrade(tradeId);
   const accept = useTradeAction(tradeId, (version: number) => api.trades.accept(tradeId, version));
@@ -172,7 +174,7 @@ export function TradeConfirmationScreen({ route, navigation }: RootScreenProps<'
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   row: { flexDirection: 'row', gap: spacing.sm },
   banner: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: radius.lg },
@@ -180,4 +182,4 @@ const styles = StyleSheet.create({
   final: { gap: spacing.sm },
   finalRow: { flexDirection: 'row', justifyContent: 'space-between' },
   review: { gap: spacing.xs },
-});
+}));

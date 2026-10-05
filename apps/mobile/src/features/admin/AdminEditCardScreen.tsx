@@ -11,7 +11,7 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { cardFormFrom, diffCard, REASON_MAX, validateCardForm, type CardForm } from './adminForm';
 import { useAdminCard, useAdminUpdateCard } from './hooks';
 
@@ -30,6 +30,7 @@ export function AdminEditCardScreen({ route, navigation }: RootScreenProps<'Admi
 }
 
 function EditCardForm({ card, onDone }: { card: AdminCardDetail; onDone: () => void }) {
+  const { colors } = useTheme();
   const [form, setForm] = useState<CardForm>(() => cardFormFrom(card));
   const [reason, setReason] = useState('');
   const update = useAdminUpdateCard(card.id);

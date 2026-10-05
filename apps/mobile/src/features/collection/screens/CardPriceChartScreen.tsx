@@ -11,13 +11,14 @@ import { Surface } from '../../../components/Surface';
 import { TrendBadge } from '../../../components/TrendBadge';
 import type { RootScreenProps } from '../../../navigation/types';
 import { useUiPrefs } from '../../../stores/uiPrefs';
-import { colors, spacing } from '../../../theme';
+import { spacing, useTheme } from '../../../theme';
 import { formatDateLong } from '../../../utils/format';
 import { useCollectionItem, useItemPriceHistory } from '../hooks';
 
 const RANGE_OPTIONS = VALUE_RANGES.map((r) => ({ value: r, label: VALUE_RANGE_LABELS[r] }));
 
 export function CardPriceChartScreen({ route }: RootScreenProps<'CardPriceChart'>) {
+  const { colors } = useTheme();
   const { itemId } = route.params;
   const range = useUiPrefs((s) => s.chartRange);
   const setRange = useUiPrefs((s) => s.setChartRange);

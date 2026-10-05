@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { radius, spacing, useTheme, type ThemeColors } from '../theme';
 import { AppText } from './AppText';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -17,15 +17,17 @@ interface ButtonProps {
   testID?: string;
 }
 
-const palette: Record<Variant, { bg: string; pressed: string; fg: string; border?: string }> = {
-  primary: { bg: colors.primary, pressed: colors.primaryPressed, fg: colors.white },
+/** `pressed`: background while held; without one the button fades instead. */
+const palette = (colors: ThemeColors): Record<Variant, { bg: string; pressed?: string; fg: string; border?: string }> => ({
+  primary: { bg: colors.primary, pressed: colors.primaryPressed, fg: colors.onPrimary },
   secondary: { bg: colors.surface, pressed: colors.surfaceMuted, fg: colors.text, border: colors.border },
   ghost: { bg: 'transparent', pressed: colors.surfaceMuted, fg: colors.primary },
-  danger: { bg: colors.negativeSoft, pressed: '#F9D6D6', fg: colors.negative },
-};
+  danger: { bg: colors.negativeSoft, fg: colors.negative },
+});
 
 export function Button({ title, onPress, variant = 'primary', icon, loading, disabled, compact, style, testID }: ButtonProps) {
-  const p = palette[variant];
+  const { colors } = useTheme();
+  const p = palette(colors)[variant];
   const inactive = disabled || loading;
   return (
     <Pressable
@@ -37,7 +39,11 @@ export function Button({ title, onPress, variant = 'primary', icon, loading, dis
       style={({ pressed }) => [
         styles.base,
         compact && styles.compact,
-        { backgroundColor: pressed ? p.pressed : p.bg, borderColor: p.border ?? 'transparent', opacity: inactive ? 0.55 : 1 },
+        {
+          backgroundColor: pressed && p.pressed ? p.pressed : p.bg,
+          borderColor: p.border ?? 'transparent',
+          opacity: inactive ? 0.55 : pressed && !p.pressed ? 0.75 : 1,
+        },
         style,
       ]}
     >

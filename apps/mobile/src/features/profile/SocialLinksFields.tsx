@@ -3,7 +3,7 @@ import type { SocialLinkKey, SocialLinks } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
 import { TextField } from '../../components/Controls';
 import { SOCIAL_META } from '../../components/Social';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 
 const LINK = /^(@?[\w.-]{1,60}|https?:\/\/\S{3,190})$/i;
 
@@ -38,6 +38,7 @@ export function SocialLinksFields({
   keys: SocialLinkKey[];
   errors?: Partial<Record<SocialLinkKey, string>>;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.group}>
       <AppText variant="label" color={colors.textMuted}>

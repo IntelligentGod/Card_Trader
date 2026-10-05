@@ -6,7 +6,7 @@ import { ApiError, errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
 import { AppText } from '../../../components/AppText';
 import { Button } from '../../../components/Button';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { finishLogin } from '../sessionActions';
 import {
   getAppleCredential,
@@ -49,6 +49,8 @@ interface Props {
 
 /** "Continue with Google" / Sign in with Apple, shown only for providers that work here. Renders nothing otherwise. */
 export function SocialSignInButtons({ mode, onChallenge }: Props) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const available = useSocialProviders();
   const [busy, setBusy] = useState<SocialProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -123,9 +125,9 @@ export function SocialSignInButtons({ mode, onChallenge }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { gap: spacing.md },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   divider: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
   apple: { height: 50, width: '100%' },
-});
+}));

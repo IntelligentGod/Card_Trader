@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { CardCategory } from '@card-trader/shared';
 import { mediaUrl } from '../config';
-import { categoryColors, colors } from '../theme';
+import { useTheme } from '../theme';
 import { AppText } from './AppText';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -31,6 +31,7 @@ interface CardArtProps {
  * would be unreadable at thumbnail size.
  */
 export function CardArt({ imageUrl, name, category, width = 56, cardNumber, badge }: CardArtProps) {
+  const { categoryColors, colors } = useTheme();
   const height = Math.round(width * (88 / 63));
   const palette = categoryColors[category];
   const large = width >= 90;

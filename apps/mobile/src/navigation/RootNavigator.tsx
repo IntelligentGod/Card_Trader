@@ -51,7 +51,7 @@ import { TradeHistoryScreen } from '../features/trades/screens/TradeListScreens'
 import { OtherUserCollectionScreen } from '../features/users/OtherUserCollectionScreen';
 import { OtherUserProfileScreen } from '../features/users/OtherUserProfileScreen';
 import { useSession } from '../stores/session';
-import { colors } from '../theme';
+import { useTheme } from '../theme';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 
@@ -62,6 +62,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * from anywhere (home, a scan, a trade) with a single navigate() call.
  */
 export function RootNavigator() {
+  const { colors } = useTheme();
   const status = useSession((s) => s.status);
   /** an admin reset the password: nothing else is allowed until it's changed */
   const mustChangePassword = useSession((s) => !!s.user?.mustChangePassword);

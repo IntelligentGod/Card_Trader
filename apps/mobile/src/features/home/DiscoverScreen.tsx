@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { FlatList, Pressable, View, useWindowDimensions } from 'react-native';
 import {
   formatCents,
   formatPercent,
@@ -25,7 +25,7 @@ import { EmptyState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { TabScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
-import { categoryColors, colors, radius, shadow, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { greeting } from '../../utils/format';
 import { useUnreadCount } from '../notifications/hooks';
 import { usePortfolioHistory, usePortfolioSummary, useTopCards } from '../portfolio/hooks';
@@ -51,6 +51,8 @@ const REFRESH_ON_FOCUS = [queryKeys.portfolio, queryKeys.trades, queryKeys.event
  * upcoming card shows, value over time, top cards and open trades.
  */
 export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   useRefreshOnFocus(REFRESH_ON_FOCUS);
   const user = useSession((s) => s.user);
   const unread = useUnreadCount();
@@ -196,6 +198,8 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
 // ───────────── Header ─────────────
 
 function HeaderButton({ icon, label, onPress, testID, dot }: { icon: IconName; label: string; onPress: () => void; testID?: string; dot?: boolean }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <Pressable
       style={({ pressed }) => [styles.headerButton, pressed && styles.pressed]}
@@ -211,6 +215,8 @@ function HeaderButton({ icon, label, onPress, testID, dot }: { icon: IconName; l
 }
 
 function SectionTitle({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.sectionHeader}>
       <AppText variant="heading">{title}</AppText>
@@ -229,10 +235,12 @@ function SectionTitle({ title, onSeeAll }: { title: string; onSeeAll?: () => voi
 // ───────────── Quick actions ─────────────
 
 function QuickAction({ icon, tint, solid, label, hint, onPress }: { icon: IconName; tint: string; solid?: boolean; label: string; hint: string; onPress: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <Pressable style={({ pressed }) => [styles.quick, pressed && styles.pressed]} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
       <View style={[styles.quickIcon, { backgroundColor: solid ? tint : `${tint}1F` }]}>
-        <Ionicons name={icon} size={22} color={solid ? colors.white : tint} />
+        <Ionicons name={icon} size={22} color={solid ? colors.onPrimary : tint} />
       </View>
       <AppText variant="bodyStrong" style={styles.quickLabel} numberOfLines={1}>
         {label}
@@ -247,6 +255,7 @@ function QuickAction({ icon, tint, solid, label, hint, onPress }: { icon: IconNa
 // ───────────── Shows ─────────────
 
 function ShowCarousel({ shows, onOpen }: { shows: EventSummary[]; onOpen: (eventId: string) => void }) {
+  const styles = useStyles();
   const { width } = useWindowDimensions();
   const cardWidth = shows.length > 1 ? width - spacing.lg * 2 - 28 : width - spacing.lg * 2;
   return (
@@ -264,6 +273,8 @@ function ShowCarousel({ shows, onOpen }: { shows: EventSummary[]; onOpen: (event
 }
 
 function ShowCard({ event, width, onPress }: { event: EventSummary; width: number; onPress: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const start = new Date(event.startsAt);
   const end = new Date(event.endsAt);
   const time = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -306,8 +317,8 @@ function ShowCard({ event, width, onPress }: { event: EventSummary; width: numbe
         </View>
       </View>
       <View style={styles.showArt}>
-        <Ionicons name="storefront" size={26} color={colors.white} />
-        <AppText variant="caption" color={colors.white} style={styles.bold}>
+        <Ionicons name="storefront" size={26} color={colors.onPrimary} />
+        <AppText variant="caption" color={colors.onPrimary} style={styles.bold}>
           {event.approvedVendorCount} {event.approvedVendorCount === 1 ? 'vendor' : 'vendors'}
         </AppText>
       </View>
@@ -319,6 +330,8 @@ function ShowCard({ event, width, onPress }: { event: EventSummary; width: numbe
 // ───────────── Value chart ─────────────
 
 function RangePicker({ value, onChange }: { value: ValueRange; onChange: (range: ValueRange) => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   return (
     <View>
@@ -353,6 +366,8 @@ function RangePicker({ value, onChange }: { value: ValueRange; onChange: (range:
 }
 
 function ChartHeadline({ points, loading }: { points: readonly { valueCents: number }[] | undefined; loading: boolean }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   if (loading || !points || points.length === 0) return <SkeletonBlock width={160} height={34} />;
   const first = points[0]!.valueCents;
   const last = points[points.length - 1]!.valueCents;
@@ -378,6 +393,8 @@ function ChartHeadline({ points, loading }: { points: readonly { valueCents: num
 // ───────────── Cards & trades ─────────────
 
 function TopCardTile({ item, onPress }: { item: CollectionItemResponse; onPress: () => void }) {
+  const styles = useStyles();
+  const { categoryColors, colors } = useTheme();
   const palette = categoryColors[item.card.category];
   const value = item.totalValueCents !== null ? formatCents(item.totalValueCents) : 'No price yet';
   return (
@@ -409,6 +426,8 @@ function TopCardTile({ item, onPress }: { item: CollectionItemResponse; onPress:
 }
 
 function TradeRow({ trade, myName, myAvatar, onPress }: { trade: TradeListItem; myName: string; myAvatar: string | null; onPress: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const other = trade.otherUser;
   const statusText = trade.awaitingMe
     ? trade.isCounterOffer
@@ -417,7 +436,7 @@ function TradeRow({ trade, myName, myAvatar, onPress }: { trade: TradeListItem; 
     : trade.status === 'PROPOSED'
       ? 'Waiting for response'
       : TRADE_STATUS_LABELS[trade.status];
-  const pill = trade.awaitingMe ? { bg: colors.primary, fg: colors.white } : { bg: colors.primarySoft, fg: colors.primary };
+  const pill = trade.awaitingMe ? { bg: colors.primary, fg: colors.onPrimary } : { bg: colors.primarySoft, fg: colors.primary };
   return (
     <Pressable style={({ pressed }) => [styles.tradeRow, pressed && styles.pressed]} onPress={onPress} accessibilityRole="button">
       <View style={styles.tradeAvatars}>
@@ -443,7 +462,7 @@ function TradeRow({ trade, myName, myAvatar, onPress }: { trade: TradeListItem; 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadow }) => ({
   flex: { flex: 1 },
   bold: { fontWeight: '700' },
   pressed: { opacity: 0.85 },
@@ -510,7 +529,7 @@ const styles = StyleSheet.create({
     width: 76,
     height: 64,
     borderRadius: radius.md,
-    backgroundColor: '#4F86F7',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
@@ -531,7 +550,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     zIndex: 10,
     elevation: 8,
-    shadowColor: '#1B2150',
+    shadowColor: shadow.shadowColor,
     shadowOpacity: 0.15,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
@@ -565,4 +584,4 @@ const styles = StyleSheet.create({
   },
   tradeAvatars: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statusPill: { maxWidth: 130, borderRadius: radius.pill, paddingHorizontal: spacing.sm + 2, paddingVertical: 4 },
-});
+}));

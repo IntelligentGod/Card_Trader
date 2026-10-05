@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { VENDOR_APPLICATION_LABELS, type EventSummary } from '@card-trader/shared';
-import { colors, radius, shadow, spacing } from '../theme';
+import { makeStyles, radius, spacing, useTheme } from '../theme';
 import { eventDateBadge, formatEventDates } from '../utils/format';
 import { AppText } from './AppText';
 
 /** One card show in a list: date badge, title, where, and my relationship to it. */
 export function EventCard({ event, onPress, compact = false }: { event: EventSummary; onPress: () => void; compact?: boolean }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const badge = eventDateBadge(event.startsAt);
   const tags: { label: string; color: string }[] = [];
   if (event.status === 'DRAFT') tags.push({ label: 'Draft', color: colors.warning });
@@ -68,7 +70,7 @@ export function EventCard({ event, onPress, compact = false }: { event: EventSum
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadow }) => ({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -94,4 +96,4 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginTop: 2 },
   tag: { fontWeight: '700' },
-});
+}));

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { isAdminRole } from '@card-trader/shared';
 import { errorMessage } from '../../api/client';
 import { api } from '../../api/endpoints';
@@ -16,11 +16,13 @@ import { SocialLinksRow } from '../../components/Social';
 import { Surface } from '../../components/Surface';
 import type { TabScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
-import { colors, spacing } from '../../theme';
+import { makeStyles, spacing, useTheme } from '../../theme';
 import { signOut } from '../auth/sessionActions';
 import { useMe, useUpdateMe } from './hooks';
 
 export function MyProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const me = useMe();
   const user = useSession((s) => s.user);
   const update = useUpdateMe();
@@ -54,7 +56,7 @@ export function MyProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
         <Pressable onPress={() => void changeAvatar()} disabled={uploading} accessibilityLabel="Change profile photo">
           <Avatar url={user.avatarUrl} name={user.displayName} size={88} />
           <View style={styles.cameraBadge}>
-            <Ionicons name={uploading ? 'hourglass-outline' : 'camera'} size={14} color={colors.white} />
+            <Ionicons name={uploading ? 'hourglass-outline' : 'camera'} size={14} color={colors.onPrimary} />
           </View>
         </Pressable>
         <AppText variant="title">{user.displayName}</AppText>
@@ -143,7 +145,7 @@ export function MyProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   header: { alignItems: 'center', gap: spacing.sm },
   cameraBadge: {
     position: 'absolute',
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.white,
+    borderColor: colors.surface,
   },
   stats: { flexDirection: 'row', gap: spacing.xl, marginTop: spacing.sm },
   stat: { alignItems: 'center', gap: 2 },
@@ -164,4 +166,4 @@ const styles = StyleSheet.create({
   actions: { gap: spacing.sm },
   vendor: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   vendorText: { flex: 1, gap: 2 },
-});
+}));

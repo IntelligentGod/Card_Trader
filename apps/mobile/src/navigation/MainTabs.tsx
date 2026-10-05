@@ -6,7 +6,7 @@ import { DiscoverScreen } from '../features/home/DiscoverScreen';
 import { MyProfileScreen } from '../features/profile/MyProfileScreen';
 import { useNotificationAlerts } from '../features/notifications/phoneAlerts';
 import { ActiveTradesScreen } from '../features/trades/screens/TradeListScreens';
-import { colors } from '../theme';
+import { useTheme } from '../theme';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -21,6 +21,7 @@ const ICONS: Record<keyof MainTabParamList, [keyof typeof Ionicons.glyphMap, key
 
 /** Discover | Inventory | Trade | Events | Profile */
 export function MainTabs() {
+  const { colors } = useTheme();
   useNotificationAlerts();
 
   return (

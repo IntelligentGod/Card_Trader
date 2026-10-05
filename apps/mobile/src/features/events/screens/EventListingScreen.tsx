@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { CATEGORY_LABELS, CONDITION_LABELS, formatCents } from '@card-trader/shared';
 import { errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
@@ -16,12 +16,14 @@ import { SkeletonBlock } from '../../../components/Skeleton';
 import { Surface } from '../../../components/Surface';
 import type { RootScreenProps } from '../../../navigation/types';
 import { useSession } from '../../../stores/session';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { cardSubtitle, formatDateShort } from '../../../utils/format';
 import { useStartTrade } from '../../trades/useStartTrade';
 
 /** "View Card" from Search This Event: the card, its comps, and who has it at which table. */
 export function EventListingScreen({ route, navigation }: RootScreenProps<'EventListing'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { eventId, result } = route.params;
   const { item, vendor, vendorInfo, tableNumber } = result;
   const ownPublicId = useSession((s) => s.user?.publicId);
@@ -132,6 +134,8 @@ export function EventListingScreen({ route, navigation }: RootScreenProps<'Event
 }
 
 function Detail({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.detail}>
       <AppText color={colors.textMuted}>{label}</AppText>
@@ -140,7 +144,7 @@ function Detail({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   photos: { flexDirection: 'row', gap: spacing.sm, justifyContent: 'center' },
   gap: { gap: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -158,4 +162,4 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   table: { alignItems: 'center', paddingHorizontal: spacing.sm, borderRadius: radius.sm, backgroundColor: colors.primarySoft },
   footer: { gap: spacing.sm },
-});
+}));

@@ -12,7 +12,7 @@ import { Screen } from '../../components/Screen';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { useUpsertVendor } from './hooks';
 import { cleanSocialLinks, socialLinkErrors, SocialLinksFields } from './SocialLinksFields';
 
@@ -21,6 +21,7 @@ import { cleanSocialLinks, socialLinkErrors, SocialLinksFields } from './SocialL
  * history are unchanged. Turning it off hides the business details from others.
  */
 export function VendorProfileEditScreen({ navigation }: RootScreenProps<'VendorProfileEdit'>) {
+  const { colors } = useTheme();
   const vendor = useSession((s) => s.user?.vendor ?? null);
   const [isActive, setIsActive] = useState(vendor?.isActive ?? true);
   const [businessName, setBusinessName] = useState(vendor?.businessName ?? '');

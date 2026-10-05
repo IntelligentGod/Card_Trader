@@ -5,7 +5,7 @@ import { AppText } from '../../../components/AppText';
 import { CardRow } from '../../../components/CardRow';
 import { PriceText } from '../../../components/PriceText';
 import { Surface } from '../../../components/Surface';
-import { colors, spacing } from '../../../theme';
+import { makeStyles, spacing, useTheme } from '../../../theme';
 
 interface TradeSideProps {
   title: string;
@@ -19,6 +19,8 @@ interface TradeSideProps {
 }
 
 function ItemDetails({ item }: { item: TradeItemResponse }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.details}>
       {item.certNumber ? (
@@ -40,6 +42,8 @@ function ItemDetails({ item }: { item: TradeItemResponse }) {
 }
 
 export function TradeSide({ title, side, editable, onAdd, onRemove, removingId, showDetails }: TradeSideProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <Surface style={styles.container}>
       <View style={styles.header}>
@@ -112,7 +116,7 @@ export function TradeSide({ title, side, editable, onAdd, onRemove, removingId, 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { gap: spacing.sm },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   accepted: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -126,4 +130,4 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: spacing.sm,
   },
-});
+}));

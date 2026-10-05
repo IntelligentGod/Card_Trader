@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Share, StyleSheet, View } from 'react-native';
+import { Share, View } from 'react-native';
 import { buildUserDeepLink } from '@card-trader/shared';
 import { api } from '../../api/endpoints';
 import { queryKeys } from '../../api/queryKeys';
@@ -10,13 +10,15 @@ import { QRCodeView } from '../../components/QRCodeView';
 import { Screen } from '../../components/Screen';
 import { Surface } from '../../components/Surface';
 import { useSession } from '../../stores/session';
-import { colors, spacing } from '../../theme';
+import { makeStyles, spacing, useTheme } from '../../theme';
 
 /**
  * Works offline: the QR is drawn on-device from the cached public id, so it can
  * be shown even with no signal on the show floor.
  */
 export function MyQrCodeScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const user = useSession((s) => s.user);
   const qr = useQuery({ queryKey: queryKeys.qr, queryFn: api.users.qr, enabled: !!user });
   const publicId = qr.data?.publicId ?? user?.publicId;
@@ -49,9 +51,9 @@ export function MyQrCodeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   content: { alignItems: 'stretch' },
   card: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xl },
   rating: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   qr: { padding: spacing.md, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border },
-});
+}));

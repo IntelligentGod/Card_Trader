@@ -1,14 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { Screen } from '../../components/Screen';
 import { EmptyState } from '../../components/States';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { helpArticle, HELP_SECTIONS, type HelpBlock } from './articles';
 import { ContactSupportCard } from './HelpCenterScreen';
 
 export function HelpArticleScreen({ route }: RootScreenProps<'HelpArticle'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const article = helpArticle(route.params.articleId);
   if (!article) return <EmptyState icon="help-circle-outline" title="Article not found" />;
   const section = HELP_SECTIONS.find((s) => s.id === article.section);
@@ -34,6 +36,8 @@ export function HelpArticleScreen({ route }: RootScreenProps<'HelpArticle'>) {
 }
 
 function Block({ block }: { block: HelpBlock }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   switch (block.kind) {
     case 'paragraph':
       return <AppText style={styles.paragraph}>{block.text}</AppText>;
@@ -43,7 +47,7 @@ function Block({ block }: { block: HelpBlock }) {
           {block.items.map((item, index) => (
             <View key={index} style={styles.step}>
               <View style={styles.stepNumber}>
-                <AppText variant="caption" color={colors.white} style={styles.stepNumberText}>
+                <AppText variant="caption" color={colors.onPrimary} style={styles.stepNumberText}>
                   {index + 1}
                 </AppText>
               </View>
@@ -62,7 +66,7 @@ function Block({ block }: { block: HelpBlock }) {
   }
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   header: { gap: spacing.xs },
   paragraph: { lineHeight: 22 },
@@ -71,4 +75,4 @@ const styles = StyleSheet.create({
   stepNumber: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   stepNumberText: { fontWeight: '700' },
   tip: { flexDirection: 'row', gap: spacing.sm, backgroundColor: colors.primarySoft, borderRadius: radius.md, padding: spacing.md },
-});
+}));

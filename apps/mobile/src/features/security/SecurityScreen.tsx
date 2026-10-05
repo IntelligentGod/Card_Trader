@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import type { AuthProviderType, MeResponse } from '@card-trader/shared';
 import { errorMessage } from '../../api/client';
 import { api } from '../../api/endpoints';
@@ -11,7 +11,7 @@ import { Screen } from '../../components/Screen';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { socialErrorMessage, useSocialProviders, type SocialProvider } from '../auth/components/SocialSignInButtons';
 import { applyMe } from '../auth/hooks';
 import { getAppleCredential, getGoogleIdToken } from '../auth/socialSignIn';
@@ -23,6 +23,8 @@ const PROVIDER_NAME: Record<SocialProvider, string> = { google: 'Google', apple:
 
 /** Settings → Security: password, two-factor authentication and sign-in methods. */
 export function SecurityScreen({ navigation }: RootScreenProps<'Security'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const me = useMe();
   const user = useSession((s) => s.user);
   const available = useSocialProviders();
@@ -153,6 +155,8 @@ export function SecurityScreen({ navigation }: RootScreenProps<'Security'>) {
 }
 
 function Row({ icon, title, subtitle, action }: { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle?: string; action?: ReactNode }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
       <View style={styles.rowIcon}>
@@ -174,6 +178,8 @@ function Row({ icon, title, subtitle, action }: { icon: keyof typeof Ionicons.gl
 }
 
 function StatusPill({ on, onLabel, offLabel }: { on: boolean; onLabel: string; offLabel: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={[styles.pill, { backgroundColor: on ? colors.positiveSoft : colors.warningSoft }]}>
       <AppText variant="caption" color={on ? colors.positive : colors.warning} style={styles.pillText}>
@@ -183,7 +189,7 @@ function StatusPill({ on, onLabel, offLabel }: { on: boolean; onLabel: string; o
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   group: { gap: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
@@ -191,4 +197,4 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', gap: spacing.sm },
   pill: { borderRadius: radius.pill, paddingHorizontal: spacing.sm + 2, paddingVertical: 3 },
   pillText: { fontWeight: '700' },
-});
+}));

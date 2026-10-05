@@ -6,7 +6,7 @@ import { api } from '../../api/endpoints';
 import { AppText } from '../../components/AppText';
 import { Screen } from '../../components/Screen';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors } from '../../theme';
+import { useTheme } from '../../theme';
 import { TwoFactorCodeForm } from '../auth/components/TwoFactorCodeForm';
 import { refreshMe } from '../auth/sessionActions';
 
@@ -23,6 +23,7 @@ const COPY = {
 
 /** Proof of the second factor before turning 2FA off or replacing the recovery codes. */
 export function TwoFactorProofScreen({ route, navigation }: RootScreenProps<'TwoFactorProof'>) {
+  const { colors } = useTheme();
   const { purpose } = route.params;
 
   const disable = useMutation({

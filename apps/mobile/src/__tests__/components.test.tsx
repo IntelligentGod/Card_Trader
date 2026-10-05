@@ -6,7 +6,9 @@ import { VerifiedTradeBadge } from '../components/Profile';
 import { PriceText } from '../components/PriceText';
 import { EmptyState } from '../components/States';
 import { TrendBadge } from '../components/TrendBadge';
-import { colors } from '../theme';
+import { purpleTheme } from '../theme';
+
+const { colors } = purpleTheme;
 
 describe('PriceText', () => {
   it('formats cents and shows a placeholder without an estimate', () => {

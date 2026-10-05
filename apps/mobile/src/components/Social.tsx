@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
 import { SOCIAL_LINK_KEYS, type SocialLinkKey, type SocialLinks } from '@card-trader/shared';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, radius, spacing, useTheme } from '../theme';
 import { AppText } from './AppText';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -24,6 +24,8 @@ export function socialUrl(key: SocialLinkKey, value: string): string | null {
 }
 
 export function SocialLinksRow({ links, website }: { links: SocialLinks; website?: string | null }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const entries = SOCIAL_LINK_KEYS.flatMap((key) => {
     const value = key === 'website' ? (website ?? links.website) : links[key];
     const url = value ? socialUrl(key, value) : null;
@@ -50,7 +52,7 @@ export function SocialLinksRow({ links, website }: { links: SocialLinks; website
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' },
   chip: {
     flexDirection: 'row',
@@ -61,4 +63,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.primarySoft,
   },
-});
+}));

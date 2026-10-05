@@ -10,7 +10,7 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { socialLinkErrors, SocialLinksFields } from '../profile/SocialLinksFields';
 import {
   diffUser,
@@ -46,6 +46,7 @@ export function AdminEditUserScreen({ route, navigation }: RootScreenProps<'Admi
 }
 
 function EditUserForm({ user, onDone }: { user: AdminUserDetail; onDone: () => void }) {
+  const { colors } = useTheme();
   const [form, setForm] = useState<UserForm>(() => userFormFrom(user));
   const [vendorForm, setVendorForm] = useState<VendorForm | null>(() => (user.vendor ? vendorFormFrom(user.vendor) : null));
   const [reason, setReason] = useState('');

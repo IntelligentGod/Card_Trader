@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import type { TwoFactorChallengeResponse } from '@card-trader/shared';
 import { errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
@@ -11,12 +11,14 @@ import { TextField } from '../../../components/Controls';
 import { Screen } from '../../../components/Screen';
 import type { RootScreenProps } from '../../../navigation/types';
 import { useAuthNotice } from '../../../stores/authNotice';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { SocialSignInButtons } from '../components/SocialSignInButtons';
 import { finishLogin } from '../sessionActions';
 import { hasErrors, validateLogin, type AuthFormErrors } from '../validation';
 
 export function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<AuthFormErrors>({});
@@ -89,7 +91,7 @@ export function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center' },
   header: { gap: spacing.sm, marginBottom: spacing.lg },
@@ -101,4 +103,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
   },
-});
+}));

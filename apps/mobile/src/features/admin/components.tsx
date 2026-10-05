@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { memo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import {
   formatCents,
   TRADE_STATUS_LABELS,
@@ -14,7 +14,7 @@ import {
 import { AppText } from '../../components/AppText';
 import { Avatar } from '../../components/Profile';
 import { Surface } from '../../components/Surface';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme, type ThemeColors } from '../../theme';
 import { formatDateShort } from '../../utils/format';
 import {
   adminCashText,
@@ -26,28 +26,29 @@ import {
   USER_STATUS_LABELS,
 } from './adminText';
 
-export const TRADE_STATUS_COLOR: Record<TradeStatus, string> = {
+export const TRADE_STATUS_COLOR = (colors: ThemeColors): Record<TradeStatus, string> => ({
   DRAFT: colors.textMuted,
   PROPOSED: colors.primary,
   ACCEPTED: colors.warning,
   COMPLETED: colors.positive,
   CANCELLED: colors.textSubtle,
   DECLINED: colors.negative,
-};
+});
 
-const ROLE_TONE: Record<UserRole, { fg: string; bg: string }> = {
+const ROLE_TONE = (colors: ThemeColors): Record<UserRole, { fg: string; bg: string }> => ({
   USER: { fg: colors.textMuted, bg: colors.surfaceMuted },
   ADMIN: { fg: colors.primary, bg: colors.primarySoft },
-  SUPER_ADMIN: { fg: colors.white, bg: colors.primary },
-};
+  SUPER_ADMIN: { fg: colors.onPrimary, bg: colors.primary },
+});
 
-const STATUS_TONE: Record<UserStatus, { fg: string; bg: string }> = {
+const STATUS_TONE = (colors: ThemeColors): Record<UserStatus, { fg: string; bg: string }> => ({
   ACTIVE: { fg: colors.positive, bg: colors.positiveSoft },
   BLOCKED: { fg: colors.negative, bg: colors.negativeSoft },
   DISABLED: { fg: colors.textMuted, bg: colors.surfaceMuted },
-};
+});
 
 export function Pill({ label, fg, bg }: { label: string; fg: string; bg: string }) {
+  const styles = useStyles();
   return (
     <View style={[styles.pill, { backgroundColor: bg }]}>
       <AppText variant="caption" color={fg} style={styles.pillText} numberOfLines={1}>
@@ -58,15 +59,18 @@ export function Pill({ label, fg, bg }: { label: string; fg: string; bg: string 
 }
 
 export function RoleBadges({ role, status }: { role: UserRole; status: UserStatus }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.badges}>
-      <Pill label={USER_ROLE_LABELS[role]} {...ROLE_TONE[role]} />
-      <Pill label={USER_STATUS_LABELS[status]} {...STATUS_TONE[status]} />
+      <Pill label={USER_ROLE_LABELS[role]} {...ROLE_TONE(colors)[role]} />
+      <Pill label={USER_STATUS_LABELS[status]} {...STATUS_TONE(colors)[status]} />
     </View>
   );
 }
 
 export function VerifiedBadge({ verified }: { verified: boolean }) {
+  const { colors } = useTheme();
   return verified ? (
     <Pill label="Verified" fg={colors.positive} bg={colors.positiveSoft} />
   ) : (
@@ -76,6 +80,8 @@ export function VerifiedBadge({ verified }: { verified: boolean }) {
 
 /** Small label + big number block for the overview grid and user header. */
 export function StatTile({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.tile}>
       <AppText variant="heading" numberOfLines={1}>
@@ -94,6 +100,8 @@ export function StatTile({ label, value, hint }: { label: string; value: string 
 }
 
 export const AdminUserRow = memo(function AdminUserRow({ user, onPress }: { user: AdminUserListItem; onPress: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} onPress={onPress}>
       <Avatar url={user.avatarUrl} name={user.displayName} size={44} />
@@ -124,6 +132,8 @@ export const AdminUserRow = memo(function AdminUserRow({ user, onPress }: { user
 });
 
 export const AdminTradeRow = memo(function AdminTradeRow({ trade, onPress }: { trade: AdminTradeListItem; onPress: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const initiator = trade.initiator.displayName;
   const counterparty = trade.counterparty.displayName;
   return (
@@ -140,7 +150,7 @@ export const AdminTradeRow = memo(function AdminTradeRow({ trade, onPress }: { t
           {trade.event ? ` · ${trade.event.title}` : ''}
         </AppText>
         <View style={styles.meta}>
-          <AppText variant="caption" color={TRADE_STATUS_COLOR[trade.status]} style={styles.status}>
+          <AppText variant="caption" color={TRADE_STATUS_COLOR(colors)[trade.status]} style={styles.status}>
             {TRADE_STATUS_LABELS[trade.status]}
             {trade.isCounterOffer ? ' · Counteroffer' : ''}
           </AppText>
@@ -156,6 +166,8 @@ export const AdminTradeRow = memo(function AdminTradeRow({ trade, onPress }: { t
 
 /** One audit-log entry: what changed, by which admin, when and why. */
 export function AuditEntryCard({ entry, onOpenTarget }: { entry: AdminAuditEntry; onOpenTarget?: (publicId: string) => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const lines = auditChangeLines(entry);
   const target = entry.target;
   return (
@@ -200,7 +212,7 @@ export function AuditEntryCard({ entry, onOpenTarget }: { entry: AdminAuditEntry
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   audit: { gap: 2 },
   auditHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   pill: { borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
@@ -212,4 +224,4 @@ const styles = StyleSheet.create({
   body: { flex: 1, gap: 2 },
   meta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginTop: 2 },
   status: { fontWeight: '700' },
-});
+}));

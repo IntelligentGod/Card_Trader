@@ -10,11 +10,12 @@ import { Button } from '../../components/Button';
 import { TextField } from '../../components/Controls';
 import { Screen } from '../../components/Screen';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 
 const LABELS = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
 
 export function ReviewUserScreen({ route, navigation }: RootScreenProps<'ReviewUser'>) {
+  const { colors } = useTheme();
   const { tradeId, displayName } = route.params;
   const client = useQueryClient();
   const [rating, setRating] = useState(0);

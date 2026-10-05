@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import {
   CATEGORY_LABELS,
   formatCents,
@@ -21,7 +21,7 @@ import { Surface } from '../../components/Surface';
 import { TrendBadge, trendColors } from '../../components/TrendBadge';
 import type { RootScreenProps } from '../../navigation/types';
 import { useUiPrefs } from '../../stores/uiPrefs';
-import { categoryColors, colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { cardSubtitle } from '../../utils/format';
 import { useMovers, usePortfolioHistory, usePortfolioSummary, useTopCards } from './hooks';
 
@@ -32,6 +32,8 @@ const WINDOWS: { value: MoverWindow; label: string }[] = [
 ];
 
 export function CollectionAnalyticsScreen({ navigation }: RootScreenProps<'CollectionAnalytics'>) {
+  const styles = useStyles();
+  const { colors, categoryColors } = useTheme();
   const range = useUiPrefs((s) => s.chartRange);
   const setRange = useUiPrefs((s) => s.setChartRange);
   const [moverWindow, setMoverWindow] = useState<MoverWindow>('7d');
@@ -62,7 +64,7 @@ export function CollectionAnalyticsScreen({ navigation }: RootScreenProps<'Colle
       imageUrl={mover.item.imageUrl}
       valueCents={mover.currentValueCents}
       trailing={
-        <AppText variant="caption" color={trendColors(mover.changeCents).fg}>
+        <AppText variant="caption" color={trendColors(mover.changeCents, colors).fg}>
           {formatSignedCents(mover.changeCents)} ({formatPercent(mover.percent)})
         </AppText>
       }
@@ -154,11 +156,11 @@ export function CollectionAnalyticsScreen({ navigation }: RootScreenProps<'Colle
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   gap: { gap: spacing.sm },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   categoryRow: { gap: 6, paddingVertical: spacing.xs },
   categoryLabel: { flexDirection: 'row', justifyContent: 'space-between' },
   barTrack: { height: 10, borderRadius: radius.pill, backgroundColor: colors.surfaceMuted, overflow: 'hidden' },
   bar: { height: 10, borderRadius: radius.pill },
-});
+}));

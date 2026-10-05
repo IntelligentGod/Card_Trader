@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { errorMessage } from '../../api/client';
 import { api } from '../../api/endpoints';
 import { queryKeys } from '../../api/queryKeys';
@@ -17,11 +17,13 @@ import { ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import { mediaUrl } from '../../config';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { formatDateLong } from '../../utils/format';
 import { useStartTrade } from '../trades/useStartTrade';
 
 export function OtherUserProfileScreen({ route, navigation }: RootScreenProps<'OtherUserProfile'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { publicId, eventId } = route.params;
   const profile = useQuery({ queryKey: queryKeys.user(publicId), queryFn: () => api.users.publicProfile(publicId) });
   const reviews = useQuery({ queryKey: queryKeys.userReviews(publicId), queryFn: () => api.users.reviews(publicId) });
@@ -132,6 +134,8 @@ export function OtherUserProfileScreen({ route, navigation }: RootScreenProps<'O
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.stat}>
       <AppText variant="heading">{value}</AppText>
@@ -142,7 +146,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   header: { alignItems: 'center', gap: spacing.sm },
   vendorBanner: {
     flexDirection: 'row',
@@ -159,4 +163,4 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: spacing.xl, marginVertical: spacing.sm },
   stat: { alignItems: 'center' },
   gap: { gap: spacing.sm },
-});
+}));

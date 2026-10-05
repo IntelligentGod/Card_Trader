@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 import { useMemo } from 'react';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { colors } from '../theme';
+import { useTheme } from '../theme';
 
 const QUIET_ZONE = 4;
 
@@ -19,6 +19,7 @@ export function qrPath(value: string): { path: string; size: number } {
 }
 
 export function QRCodeView({ value, size = 240, label = 'Your trade QR code' }: { value: string; size?: number; label?: string }) {
+  const { colors } = useTheme();
   const { path, size: modules } = useMemo(() => qrPath(value), [value]);
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${modules} ${modules}`} accessibilityLabel={label}>

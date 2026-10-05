@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useDeferredValue, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 import { errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
 import { queryKeys } from '../../../api/queryKeys';
@@ -11,7 +11,7 @@ import { TextField } from '../../../components/Controls';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { makeStyles, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
 import { useTrade, useTradeAction } from '../hooks';
 
@@ -28,6 +28,8 @@ interface PickableItem {
 
 /** Adds cards to one side of a trade: my whole collection, or their tradeable cards. */
 export function TradeAddCardsScreen({ route }: RootScreenProps<'TradeAddCards'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { tradeId, side, publicId } = route.params;
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim()) || undefined;
@@ -131,8 +133,8 @@ export function TradeAddCardsScreen({ route }: RootScreenProps<'TradeAddCards'>)
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, gap: spacing.sm },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
-});
+}));

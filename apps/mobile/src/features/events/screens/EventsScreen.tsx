@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useDeferredValue, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { EventListScope } from '@card-trader/shared';
 import { AppText } from '../../../components/AppText';
@@ -9,7 +9,7 @@ import { EventCard } from '../../../components/EventCard';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import type { TabScreenProps } from '../../../navigation/types';
-import { colors, radius, shadow, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { useEventList } from '../hooks';
 
 const SCOPES: { value: EventListScope; label: string }[] = [
@@ -25,6 +25,8 @@ const EMPTY: Record<EventListScope, { title: string; message: string }> = {
 };
 
 export function EventsScreen({ navigation }: TabScreenProps<'Events'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [scope, setScope] = useState<EventListScope>('upcoming');
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
@@ -77,13 +79,13 @@ export function EventsScreen({ navigation }: TabScreenProps<'Events'>) {
         accessibilityRole="button"
         accessibilityLabel="Create an event"
       >
-        <Ionicons name="add" size={28} color={colors.white} />
+        <Ionicons name="add" size={28} color={colors.onPrimary} />
       </Pressable>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadow }) => ({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, paddingBottom: spacing.sm, gap: spacing.sm },
   list: { padding: spacing.lg, paddingTop: spacing.sm, paddingBottom: 100, flexGrow: 1 },
@@ -99,4 +101,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...shadow,
   },
-});
+}));

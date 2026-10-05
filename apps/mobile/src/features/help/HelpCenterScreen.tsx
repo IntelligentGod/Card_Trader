@@ -8,12 +8,13 @@ import { Screen } from '../../components/Screen';
 import { EmptyState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { articlesIn, HELP_SECTIONS, searchHelp, type HelpArticle } from './articles';
 import { contactSupport, SUPPORT_EMAIL } from './contactSupport';
 
 /** Searchable how-to articles, grouped by topic, with a way to reach support. */
 export function HelpCenterScreen({ navigation }: RootScreenProps<'HelpCenter'>) {
+  const { colors } = useTheme();
   const [query, setQuery] = useState('');
   const results = useMemo(() => searchHelp(query), [query]);
   const searching = query.trim().length > 0;
@@ -65,6 +66,7 @@ export function HelpCenterScreen({ navigation }: RootScreenProps<'HelpCenter'>) 
 }
 
 export function ContactSupportCard({ onMore }: { onMore?: () => void }) {
+  const { colors } = useTheme();
   return (
     <Surface style={styles.group} testID="contact-support">
       <View style={styles.sectionTitle}>
@@ -85,6 +87,7 @@ export function ContactSupportCard({ onMore }: { onMore?: () => void }) {
 }
 
 function ArticleRow({ article, onPress }: { article: HelpArticle; onPress: () => void }) {
+  const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}

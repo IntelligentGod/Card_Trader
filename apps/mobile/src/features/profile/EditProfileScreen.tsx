@@ -7,12 +7,13 @@ import { TextField } from '../../components/Controls';
 import { Screen } from '../../components/Screen';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
-import { colors } from '../../theme';
+import { useTheme } from '../../theme';
 import { normalizeUsername, validateUsername } from '../auth/validation';
 import { useUpdateMe } from './hooks';
 import { cleanSocialLinks, socialLinkErrors, SocialLinksFields } from './SocialLinksFields';
 
 export function EditProfileScreen({ navigation }: RootScreenProps<'EditProfile'>) {
+  const { colors } = useTheme();
   const user = useSession((s) => s.user);
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [username, setUsername] = useState(user?.username ?? '');

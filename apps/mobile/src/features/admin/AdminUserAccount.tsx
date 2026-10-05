@@ -7,13 +7,14 @@ import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
 import { Surface } from '../../components/Surface';
 import type { RootStackParamList } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { adminUserActions, hasAnyAction } from './adminForm';
 import { formatTimestamp, signInMethodsText, USER_ROLE_LABELS, USER_STATUS_LABELS, yesNo } from './adminText';
 import { useAdminBlock, useAdminChangeRole } from './hooks';
 import { ReasonModal } from './ReasonModal';
 
 function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
       <AppText color={colors.textMuted}>{label}</AppText>
@@ -26,6 +27,7 @@ function Row({ label, value, tone }: { label: string; value: string; tone?: stri
 
 /** Sign-in and security facts about the account. */
 export function AccountSection({ user }: { user: AdminUserDetail }) {
+  const { colors } = useTheme();
   const blocked = user.status === 'BLOCKED';
   return (
     <Surface style={styles.group} testID="admin-account">
@@ -51,6 +53,7 @@ type Dialog = 'role' | 'block' | 'unblock' | null;
 
 /** Only the actions the server says this admin may take (`permissions`); the API enforces the same. */
 export function AccountActions({ user }: { user: AdminUserDetail }) {
+  const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const actions = adminUserActions(user);
   const [dialog, setDialog] = useState<Dialog>(null);

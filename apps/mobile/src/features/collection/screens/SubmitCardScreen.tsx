@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDeferredValue, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { CARD_CATEGORIES, CATEGORY_LABELS, type CardCategory, type CardSetSummary } from '@card-trader/shared';
 import { ApiError, errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
@@ -10,10 +10,12 @@ import { Button } from '../../../components/Button';
 import { ChipRow, TextField } from '../../../components/Controls';
 import { Screen } from '../../../components/Screen';
 import type { RootScreenProps } from '../../../navigation/types';
-import { categoryColors, colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 
 /** Adds a card missing from the catalog. It stays "pending review" and visible only to its submitter. */
 export function SubmitCardScreen({ navigation }: RootScreenProps<'SubmitCard'>) {
+  const styles = useStyles();
+  const { colors, categoryColors } = useTheme();
   const client = useQueryClient();
   const [category, setCategory] = useState<CardCategory>('POKEMON');
   const [setSearch, setSetSearch] = useState('');
@@ -98,8 +100,8 @@ export function SubmitCardScreen({ navigation }: RootScreenProps<'SubmitCard'>) 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   group: { gap: spacing.sm },
   setSelected: { backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md, gap: 2 },
   setOption: { backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md },
-});
+}));

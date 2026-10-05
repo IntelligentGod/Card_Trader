@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { MARKET_VALUE_DISCLAIMER } from '@card-trader/shared';
-import { colors, spacing } from '../theme';
+import { makeStyles, spacing, useTheme } from '../theme';
 import { AppText } from './AppText';
 
 interface ScreenProps {
@@ -17,6 +17,8 @@ interface ScreenProps {
 
 /** Standard screen shell: safe area, background, optional scroll + pull-to-refresh, sticky footer. */
 export function Screen({ children, scroll = true, refreshing = false, onRefresh, edges = [], contentStyle, footer }: ScreenProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <SafeAreaView edges={edges} style={styles.safe}>
       {scroll ? (
@@ -36,6 +38,8 @@ export function Screen({ children, scroll = true, refreshing = false, onRefresh,
 }
 
 export function Disclaimer({ text = MARKET_VALUE_DISCLAIMER }: { text?: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <AppText variant="caption" color={colors.textSubtle} align="center" style={styles.disclaimer}>
       {text}
@@ -43,7 +47,7 @@ export function Disclaimer({ text = MARKET_VALUE_DISCLAIMER }: { text?: string }
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
@@ -55,4 +59,4 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   disclaimer: { paddingHorizontal: spacing.lg },
-});
+}));

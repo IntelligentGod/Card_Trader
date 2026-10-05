@@ -9,7 +9,7 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { PASSWORD_MAX, REASON_MAX, validateNewPassword } from './adminForm';
 import { useAdminResetPassword, useAdminUser } from './hooks';
 
@@ -18,6 +18,7 @@ import { useAdminResetPassword, useAdminUser } from './hooks';
  * the request succeeds; it is cleared at once and never shown again.
  */
 export function AdminResetPasswordScreen({ route, navigation }: RootScreenProps<'AdminResetPassword'>) {
+  const { colors } = useTheme();
   const { publicId } = route.params;
   const detail = useAdminUser(publicId);
   const reset = useAdminResetPassword(publicId);

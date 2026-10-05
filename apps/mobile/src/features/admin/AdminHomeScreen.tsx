@@ -1,5 +1,5 @@
 import { useDeferredValue, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { formatCents, TRADE_STATUS_LABELS, TRADE_STATUSES, type AdminOverview, type UserRole, type UserStatus } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
@@ -9,7 +9,7 @@ import { EmptyState, ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
-import { colors, spacing } from '../../theme';
+import { makeStyles, spacing, useTheme } from '../../theme';
 import { USER_ROLE_LABELS, USER_STATUS_LABELS } from './adminText';
 import { AdminUserRow, StatTile } from './components';
 import { useAdminOverview, useAdminUserList } from './hooks';
@@ -21,6 +21,8 @@ const STATUSES: { value: UserStatus; label: string }[] = (['ACTIVE', 'BLOCKED', 
 }));
 
 function OverviewTiles({ data }: { data: AdminOverview }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.sections}>
       <Surface style={styles.group}>
@@ -67,6 +69,8 @@ function OverviewTiles({ data }: { data: AdminOverview }) {
 }
 
 export function AdminHomeScreen({ navigation }: RootScreenProps<'AdminHome'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
   const [role, setRole] = useState<UserRole | undefined>();
@@ -156,7 +160,7 @@ export function AdminHomeScreen({ navigation }: RootScreenProps<'AdminHome'>) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
   header: { gap: spacing.lg, marginBottom: spacing.sm },
@@ -165,4 +169,4 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   filters: { gap: spacing.sm },
   links: { gap: spacing.sm },
-});
+}));

@@ -1,5 +1,5 @@
 import { formatCents } from '@card-trader/shared';
-import { colors } from '../theme';
+import { useTheme } from '../theme';
 import { AppText, type TextVariant } from './AppText';
 
 interface PriceTextProps {
@@ -11,7 +11,8 @@ interface PriceTextProps {
   testID?: string;
 }
 
-export function PriceText({ cents, variant = 'bodyStrong', color = colors.text, placeholder = 'No estimate', testID }: PriceTextProps) {
+export function PriceText({ cents, variant = 'bodyStrong', color, placeholder = 'No estimate', testID }: PriceTextProps) {
+  const { colors } = useTheme();
   if (cents === null || cents === undefined) {
     return (
       <AppText testID={testID} variant={variant === 'display' || variant === 'title' ? 'heading' : 'caption'} color={colors.textSubtle}>
@@ -20,7 +21,7 @@ export function PriceText({ cents, variant = 'bodyStrong', color = colors.text, 
     );
   }
   return (
-    <AppText testID={testID} variant={variant} color={color}>
+    <AppText testID={testID} variant={variant} color={color ?? colors.text}>
       {formatCents(cents)}
     </AppText>
   );

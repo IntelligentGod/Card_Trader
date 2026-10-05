@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useDeferredValue, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   CARD_CATEGORIES,
@@ -21,7 +21,7 @@ import { ListingBadge } from '../../../components/ListingBadge';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import type { TabScreenProps } from '../../../navigation/types';
-import { categoryColors, colors, radius, shadow, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
 import { useCollectionList } from '../hooks';
 
@@ -32,12 +32,17 @@ const SORTS: { value: CollectionSort; label: string }[] = [
   { value: 'name', label: 'Name' },
 ];
 
-const CATEGORY_OPTIONS = CARD_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main }));
+const CATEGORY_OPTIONS = CARD_CATEGORIES.map((c) => {
+  const { categoryColors } = useTheme();
+  return ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main });
+});
 const STATUS_OPTIONS = LISTING_STATUSES.map((s) => ({ value: s, label: LISTING_STATUS_LABELS[s] }));
 
 const REFRESH_ON_FOCUS = [queryKeys.collection, queryKeys.portfolio];
 
 export function MyCollectionScreen({ navigation }: TabScreenProps<'Inventory'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   useRefreshOnFocus(REFRESH_ON_FOCUS);
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
@@ -110,13 +115,13 @@ export function MyCollectionScreen({ navigation }: TabScreenProps<'Inventory'>) 
       )}
 
       <Pressable style={styles.fab} onPress={() => navigation.navigate('AddCard')} accessibilityRole="button" accessibilityLabel="Add card">
-        <Ionicons name="add" size={28} color={colors.white} />
+        <Ionicons name="add" size={28} color={colors.onPrimary} />
       </Pressable>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadow }) => ({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, paddingBottom: spacing.sm, gap: spacing.sm },
   list: { padding: spacing.lg, paddingTop: spacing.sm, paddingBottom: 100, flexGrow: 1 },
@@ -132,4 +137,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...shadow,
   },
-});
+}));

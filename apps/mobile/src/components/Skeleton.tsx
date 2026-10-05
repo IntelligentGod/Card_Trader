@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View, type DimensionValue } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { Animated, View, type DimensionValue } from 'react-native';
+import { makeStyles, radius, spacing, useTheme } from '../theme';
 
 export function SkeletonBlock({ width = '100%', height = 16, rounded = radius.sm }: { width?: DimensionValue; height?: number; rounded?: number }) {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0.5)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -19,6 +20,7 @@ export function SkeletonBlock({ width = '100%', height = 16, rounded = radius.sm
 
 /** Placeholder rows shaped like CardRow while a list loads. */
 export function SkeletonList({ rows = 6 }: { rows?: number }) {
+  const styles = useStyles();
   return (
     <View testID="skeleton-list" style={styles.list}>
       {Array.from({ length: rows }, (_, i) => (
@@ -36,7 +38,7 @@ export function SkeletonList({ rows = 6 }: { rows?: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   list: { gap: spacing.sm, padding: spacing.lg },
   row: {
     flexDirection: 'row',
@@ -47,4 +49,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   body: { flex: 1, gap: spacing.sm },
-});
+}));

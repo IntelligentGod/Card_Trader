@@ -1,5 +1,5 @@
 import { useDeferredValue, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { CARD_CATEGORIES, CATEGORY_LABELS, type CardCategory, type CatalogSource } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
 import { CardRow } from '../../components/CardRow';
@@ -7,7 +7,7 @@ import { ChipRow, TextField } from '../../components/Controls';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import type { RootScreenProps } from '../../navigation/types';
-import { categoryColors, colors, spacing } from '../../theme';
+import { makeStyles, spacing, useTheme } from '../../theme';
 import { cardSubtitle } from '../../utils/format';
 import { CATALOG_SOURCE_LABELS } from './adminText';
 import { VerifiedBadge } from './components';
@@ -25,6 +25,8 @@ const VERIFIED: { value: Verified; label: string }[] = [
 ];
 
 export function AdminCardsScreen({ navigation }: RootScreenProps<'AdminCards'>) {
+  const styles = useStyles();
+  const { categoryColors, colors } = useTheme();
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
   const [category, setCategory] = useState<CardCategory | undefined>();
@@ -98,8 +100,8 @@ export function AdminCardsScreen({ navigation }: RootScreenProps<'AdminCards'>) 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, paddingBottom: spacing.sm, gap: spacing.sm },
   list: { padding: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl, flexGrow: 1 },
-});
+}));

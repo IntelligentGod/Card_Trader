@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, Share, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, Share, View } from 'react-native';
 import { errorMessage } from '../../api/client';
 import { api } from '../../api/endpoints';
 import { AppText } from '../../components/AppText';
@@ -11,13 +11,15 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { TwoFactorCodeForm } from '../auth/components/TwoFactorCodeForm';
 import { refreshMe } from '../auth/sessionActions';
 import { groupSecret } from '../auth/twoFactor';
 
 /** Scan (or type) the secret into an authenticator app, confirm one code, then save the recovery codes. */
 export function EnableTwoFactorScreen({ navigation }: RootScreenProps<'EnableTwoFactor'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   // A POST: every call makes a new secret, so run it once per visit rather than as a refetching query.
   const setup = useMutation({ mutationFn: api.auth.twoFactorSetup });
   const enable = useMutation({
@@ -93,10 +95,10 @@ export function EnableTwoFactorScreen({ navigation }: RootScreenProps<'EnableTwo
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   group: { gap: spacing.md },
   qr: { alignItems: 'center', padding: spacing.sm, backgroundColor: colors.white, borderRadius: radius.md },
   secret: { backgroundColor: colors.surfaceMuted, borderRadius: radius.md, padding: spacing.md },
   secretText: { fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }), letterSpacing: 1, textAlign: 'center' },
-});
+}));

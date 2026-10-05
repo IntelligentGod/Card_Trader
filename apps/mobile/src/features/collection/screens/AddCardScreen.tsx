@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useDeferredValue, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { CARD_CATEGORIES, CATEGORY_LABELS, type CardCategory, type CardSummary } from '@card-trader/shared';
 import { api } from '../../../api/endpoints';
 import { queryKeys } from '../../../api/queryKeys';
@@ -11,14 +11,19 @@ import { ChipRow, TextField } from '../../../components/Controls';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
-import { categoryColors, colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
 import { CollectionItemForm } from '../components/CollectionItemForm';
 import { useCreateItem } from '../hooks';
 
-const CATEGORY_OPTIONS = CARD_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main }));
+const CATEGORY_OPTIONS = CARD_CATEGORIES.map((c) => {
+  const { categoryColors } = useTheme();
+  return ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main });
+});
 
 export function AddCardScreen({ navigation }: RootScreenProps<'AddCard'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
   const [category, setCategory] = useState<CardCategory | undefined>();
@@ -127,7 +132,7 @@ export function AddCardScreen({ navigation }: RootScreenProps<'AddCard'>) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, gap: spacing.sm },
@@ -136,4 +141,4 @@ const styles = StyleSheet.create({
   footer: { gap: spacing.sm, paddingVertical: spacing.xl },
   formContainer: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl, backgroundColor: colors.background },
   selected: { flexDirection: 'row', gap: spacing.md, alignItems: 'center', backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md },
-});
+}));

@@ -14,7 +14,7 @@ import { ErrorState } from '../../../components/States';
 import { Surface } from '../../../components/Surface';
 import { trendColors } from '../../../components/TrendBadge';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { spacing, useTheme } from '../../../theme';
 import { cardSubtitle, formatDateShort } from '../../../utils/format';
 import { useCollectionItem, useDeleteItem, useItemMarketValue, useItemPriceHistory } from '../hooks';
 
@@ -26,6 +26,7 @@ const CONFIDENCE_TEXT = {
 } as const;
 
 export function CardDetailsScreen({ route, navigation }: RootScreenProps<'CardDetails'>) {
+  const { colors } = useTheme();
   const { itemId } = route.params;
   const item = useCollectionItem(itemId);
   const market = useItemMarketValue(itemId);
@@ -102,7 +103,7 @@ export function CardDetailsScreen({ route, navigation }: RootScreenProps<'CardDe
           </AppText>
         ) : null}
         {gain !== null ? (
-          <AppText variant="bodyStrong" color={trendColors(gain).fg}>
+          <AppText variant="bodyStrong" color={trendColors(gain, colors).fg}>
             {formatSignedCents(gain)} vs. what you paid
           </AppText>
         ) : null}
@@ -168,6 +169,7 @@ export function CardDetailsScreen({ route, navigation }: RootScreenProps<'CardDe
 }
 
 function Detail({ label, value }: { label: string; value: string }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.detail}>
       <AppText color={colors.textMuted}>{label}</AppText>

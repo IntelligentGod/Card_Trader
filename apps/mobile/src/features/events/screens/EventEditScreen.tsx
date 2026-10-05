@@ -11,7 +11,7 @@ import { TextField } from '../../../components/Controls';
 import { SkeletonBlock } from '../../../components/Skeleton';
 import { ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { spacing, useTheme } from '../../../theme';
 import { useEvent } from '../hooks';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -125,6 +125,7 @@ export function EventEditScreen({ route, navigation }: RootScreenProps<'EventEdi
 }
 
 function EventForm({ event, onSaved }: { event?: EventDetail; onSaved: (event: EventDetail) => void }) {
+  const { colors } = useTheme();
   const client = useQueryClient();
   const [form, setForm] = useState<EventFormState>(() => initialState(event));
   const [errors, setErrors] = useState<EventFormErrors>({});

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useDeferredValue, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import {
   CARD_CATEGORIES,
   CATEGORY_LABELS,
@@ -21,7 +21,7 @@ import { ListingBadge } from '../../../components/ListingBadge';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
-import { categoryColors, colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
 import { RAW_CONDITION_OPTIONS } from '../../collection/components/CollectionItemForm';
 import { useEvent, useEventSearch } from '../hooks';
@@ -72,6 +72,8 @@ const KINDS: { value: KindFilter; label: string }[] = [
 ];
 
 export function EventSearchScreen({ route, navigation }: RootScreenProps<'EventSearch'>) {
+  const styles = useStyles();
+  const { colors, categoryColors } = useTheme();
   const { eventId } = route.params;
   const event = useEvent(eventId);
   const [showFilters, setShowFilters] = useState(false);
@@ -112,9 +114,9 @@ export function EventSearchScreen({ route, navigation }: RootScreenProps<'EventS
             accessibilityRole="button"
             accessibilityLabel="Filters"
           >
-            <Ionicons name="options-outline" size={20} color={activeFilterCount > 0 ? colors.white : colors.primary} />
+            <Ionicons name="options-outline" size={20} color={activeFilterCount > 0 ? colors.onPrimary : colors.primary} />
             {activeFilterCount > 0 ? (
-              <AppText variant="caption" color={colors.white} style={styles.bold}>
+              <AppText variant="caption" color={colors.onPrimary} style={styles.bold}>
                 {activeFilterCount}
               </AppText>
             ) : null}
@@ -229,7 +231,7 @@ export function EventSearchScreen({ route, navigation }: RootScreenProps<'EventS
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, paddingBottom: spacing.sm, gap: spacing.sm },
   searchRow: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
@@ -252,4 +254,4 @@ const styles = StyleSheet.create({
   list: { padding: spacing.lg, paddingTop: spacing.sm, flexGrow: 1 },
   vendorLine: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   trailing: { alignItems: 'flex-end', gap: 2 },
-});
+}));

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { errorMessage } from '../api/client';
-import { colors, spacing } from '../theme';
+import { makeStyles, spacing, useTheme } from '../theme';
 import { AppText } from './AppText';
 import { Button } from './Button';
 
@@ -14,6 +14,8 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon = 'albums-outline', title, message, actionTitle, onAction }: EmptyStateProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View testID="empty-state" style={styles.container}>
       <View style={styles.iconCircle}>
@@ -33,6 +35,8 @@ export function EmptyState({ icon = 'albums-outline', title, message, actionTitl
 }
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View testID="error-state" style={styles.container}>
       <View style={[styles.iconCircle, { backgroundColor: colors.negativeSoft }]}>
@@ -49,7 +53,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { alignItems: 'center', justifyContent: 'center', padding: spacing.xxl, gap: spacing.sm },
   iconCircle: {
     width: 64,
@@ -61,4 +65,4 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   action: { marginTop: spacing.md, alignSelf: 'stretch' },
-});
+}));

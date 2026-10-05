@@ -13,18 +13,19 @@ import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import { Surface } from '../../../components/Surface';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { spacing, useTheme, type ThemeColors } from '../../../theme';
 import { formatDateShort } from '../../../utils/format';
 
-const STATUS_COLOR: Record<EventVendorResponse['status'], string> = {
+const STATUS_COLOR = (colors: ThemeColors): Record<EventVendorResponse['status'], string> => ({
   PENDING: colors.warning,
   APPROVED: colors.positive,
   DECLINED: colors.negative,
   WITHDRAWN: colors.textMuted,
-};
+});
 
 /** Organizer: approve or decline vendors and assign table numbers. */
 export function EventVendorsScreen({ route, navigation }: RootScreenProps<'EventVendors'>) {
+  const { colors } = useTheme();
   const { eventId } = route.params;
   const client = useQueryClient();
   const applications = useQuery({
@@ -91,6 +92,7 @@ function ApplicationCard({
   onApprove: (tableNumber: string) => void;
   onDecline: () => void;
 }) {
+  const { colors } = useTheme();
   const [table, setTable] = useState(application.tableNumber ?? '');
   const name = application.vendorInfo?.businessName ?? application.vendor.displayName;
   const canDecide = application.status === 'PENDING' || application.status === 'APPROVED' || application.status === 'DECLINED';
@@ -107,7 +109,7 @@ function ApplicationCard({
             @{application.vendor.username} · ★ {application.vendor.ratingAverage?.toFixed(1) ?? 'new'} · {application.vendor.completedTradeCount} trades
           </AppText>
         </View>
-        <AppText variant="caption" color={STATUS_COLOR[application.status]} style={styles.status}>
+        <AppText variant="caption" color={STATUS_COLOR(colors)[application.status]} style={styles.status}>
           {VENDOR_APPLICATION_LABELS[application.status]}
           {application.tableNumber ? ` · T${application.tableNumber}` : ''}
         </AppText>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
 import { AppText } from '../../../components/AppText';
@@ -9,7 +9,7 @@ import { SkeletonBlock } from '../../../components/Skeleton';
 import { ErrorState } from '../../../components/States';
 import { Surface } from '../../../components/Surface';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { makeStyles, spacing, useTheme } from '../../../theme';
 import { formatDateShort } from '../../../utils/format';
 import { CashSummary } from '../components/CashSummary';
 import { TradeSide } from '../components/TradeSide';
@@ -17,6 +17,8 @@ import { useTrade, useTradeAction } from '../hooks';
 import { sidesFor, statusHeadline } from '../tradeText';
 
 export function TradeBuilderScreen({ route, navigation }: RootScreenProps<'TradeBuilder'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { tradeId } = route.params;
   const trade = useTrade(tradeId);
 
@@ -160,9 +162,9 @@ export function TradeBuilderScreen({ route, navigation }: RootScreenProps<'Trade
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   header: { gap: spacing.xs },
   warning: { gap: spacing.xs, backgroundColor: colors.warningSoft },
   row: { flexDirection: 'row', alignItems: 'center' },
   flex: { flex: 1 },
-});
+}));

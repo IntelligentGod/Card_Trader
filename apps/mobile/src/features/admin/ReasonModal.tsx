@@ -4,7 +4,7 @@ import { errorMessage } from '../../api/client';
 import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/Controls';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { REASON_MAX } from './adminForm';
 
 interface ReasonModalProps {
@@ -24,6 +24,8 @@ interface ReasonModalProps {
  * The reason is cleared every time the dialog opens.
  */
 export function ReasonModal({ visible, title, message, confirmTitle, destructive, loading, error, onConfirm, onClose }: ReasonModalProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [reason, setReason] = useState('');
   useEffect(() => {
     if (visible) setReason('');
@@ -64,9 +66,9 @@ export function ReasonModal({ visible, title, message, confirmTitle, destructive
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   backdrop: { flex: 1, justifyContent: 'center', padding: spacing.lg, backgroundColor: colors.overlay },
   sheet: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
   row: { flexDirection: 'row', gap: spacing.sm },
   flex: { flex: 1 },
-});
+}));

@@ -3,15 +3,13 @@ import { Pressable, StyleSheet, View, type GestureResponderEvent, type LayoutCha
 import Svg, { G, Line, Path, Text as SvgText } from 'react-native-svg';
 import { AppText } from '../../components/AppText';
 import { Surface } from '../../components/Surface';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import {
-  AXIS_COLOR,
   BAR_COLOR,
   barIndexAt,
   barLayout,
   canShowPie,
   chartTotal,
-  GRID_COLOR,
   labelledMonths,
   monthLabel,
   percentText,
@@ -35,6 +33,8 @@ function ChartCard({
   children: ReactNode;
   canTable?: boolean;
 }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [asTable, setAsTable] = useState(false);
   return (
     <Surface style={styles.card}>
@@ -56,6 +56,8 @@ function ChartCard({
 }
 
 function TableRows({ rows }: { rows: { key: string; label: string; value: string; extra?: string }[] }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View testID="chart-table">
       {rows.map((row) => (
@@ -81,6 +83,8 @@ const PIE_R = 78;
  * Falls back to stat tiles when a pie would mislead (> 6 parts or < 3 non-zero).
  */
 export function PieChart({ title, data, format = plain, testID }: { title: string; data: ChartDatum[]; format?: Format; testID?: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [selected, setSelected] = useState<string | null>(null);
   const total = chartTotal(data);
   const slices = useMemo(() => pieSlices(data, PIE_SIZE / 2, PIE_SIZE / 2, PIE_R), [data]);
@@ -181,6 +185,7 @@ export function BarChart({
   format?: Format;
   testID?: string;
 }) {
+  const { colors } = useTheme();
   const [width, setWidth] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const plotWidth = Math.max(0, width - GUTTER);
@@ -226,9 +231,9 @@ export function BarChart({
                 const y = BAR_HEIGHT - t * BAR_HEIGHT;
                 return (
                   <G key={t}>
-                    <Line x1={GUTTER} x2={width} y1={y} y2={y} stroke={GRID_COLOR} strokeWidth={StyleSheet.hairlineWidth} />
+                    <Line x1={GUTTER} x2={width} y1={y} y2={y} stroke={colors.divider} strokeWidth={StyleSheet.hairlineWidth} />
                     {t > 0 ? (
-                      <SvgText x={GUTTER - 6} y={y + 4} fontSize={10} fill={AXIS_COLOR} textAnchor="end">
+                      <SvgText x={GUTTER - 6} y={y + 4} fontSize={10} fill={colors.textSubtle} textAnchor="end">
                         {format(max * t)}
                       </SvgText>
                     ) : null}
@@ -243,7 +248,7 @@ export function BarChart({
                 )}
                 {bars.map((bar, i) =>
                   labelled.has(i) ? (
-                    <SvgText key={`x-${points[i]!.month}`} x={bar.x + bar.width / 2} y={BAR_HEIGHT + 14} fontSize={10} fill={AXIS_COLOR} textAnchor="middle">
+                    <SvgText key={`x-${points[i]!.month}`} x={bar.x + bar.width / 2} y={BAR_HEIGHT + 14} fontSize={10} fill={colors.textSubtle} textAnchor="middle">
                       {monthLabel(points[i]!.month)}
                     </SvgText>
                   ) : null,
@@ -267,6 +272,8 @@ export function MeterTile({
   left: { label: string; value: number; color: string };
   right: { label: string; value: number; color: string };
 }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const total = left.value + right.value;
   const share = total > 0 ? left.value / total : 0;
   return (
@@ -295,7 +302,7 @@ export function MeterTile({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   card: { gap: spacing.sm },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   toggle: { fontWeight: '600' },
@@ -316,4 +323,4 @@ const styles = StyleSheet.create({
   },
   meter: { flexDirection: 'row', height: 12, borderRadius: radius.pill, overflow: 'hidden', backgroundColor: colors.surfaceMuted },
   meterGap: { width: 2, backgroundColor: colors.surface },
-});
+}));

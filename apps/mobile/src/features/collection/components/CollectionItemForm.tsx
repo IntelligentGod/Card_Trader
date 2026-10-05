@@ -22,7 +22,7 @@ import { AppText } from '../../../components/AppText';
 import { Button } from '../../../components/Button';
 import { ChipRow, Segmented, TextField } from '../../../components/Controls';
 import { mediaUrl } from '../../../config';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 
 export type ItemFormValues = Omit<CreateCollectionItemRequest, 'cardId'>;
 
@@ -113,6 +113,8 @@ function PhotoSlot({
   onPick: () => void;
   onRemove: () => void;
 }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.photoColumn}>
       <Pressable style={styles.photo} onPress={onPick} disabled={uploading} accessibilityLabel={`Choose ${label.toLowerCase()} photo`}>
@@ -140,6 +142,8 @@ function PhotoSlot({
 }
 
 export function CollectionItemForm({ initial, submitLabel, submitting, error, onSubmit }: Props) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const initialCondition = initial?.condition ?? 'NEAR_MINT';
   const [kind, setKind] = useState<Kind>(initialCondition === 'GRADED' ? 'GRADED' : 'RAW');
   const [rawCondition, setRawCondition] = useState<CardCondition>(initialCondition === 'GRADED' ? 'NEAR_MINT' : initialCondition);
@@ -324,7 +328,7 @@ export function CollectionItemForm({ initial, submitLabel, submitting, error, on
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   form: { gap: spacing.lg },
   group: { gap: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.md },
@@ -343,4 +347,4 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: colors.surface,
   },
-});
+}));

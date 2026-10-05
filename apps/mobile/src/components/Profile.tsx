@@ -3,12 +3,14 @@ import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { mediaUrl } from '../config';
 import type { ReviewResponse } from '@card-trader/shared';
-import { colors, spacing } from '../theme';
+import { makeStyles, spacing, useTheme } from '../theme';
 import { formatDateLong } from '../utils/format';
 import { AppText } from './AppText';
 import { Surface } from './Surface';
 
 export function Avatar({ url, name, size = 48 }: { url: string | null; name: string; size?: number }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const initials = name
     .split(/\s+/)
     .map((part) => part[0] ?? '')
@@ -29,6 +31,8 @@ export function Avatar({ url, name, size = 48 }: { url: string | null; name: str
 }
 
 export function RatingStars({ rating, size = 16 }: { rating: number | null; size?: number }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const value = rating ?? 0;
   return (
     <View style={styles.stars} accessibilityLabel={rating === null ? 'No ratings yet' : `Rated ${rating} out of 5`}>
@@ -44,13 +48,15 @@ export function RatingStars({ rating, size = 16 }: { rating: number | null; size
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   avatar: { backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   stars: { flexDirection: 'row', gap: 1 },
-});
+}));
 
 /** Reviews can only be left after a completed in-app trade. */
 export function VerifiedTradeBadge() {
+  const reviewStyles = useReviewStyles();
+  const { colors } = useTheme();
   return (
     <View style={reviewStyles.badge}>
       <Ionicons name="shield-checkmark" size={12} color={colors.positive} />
@@ -62,6 +68,8 @@ export function VerifiedTradeBadge() {
 }
 
 export function ReviewCard({ review }: { review: ReviewResponse }) {
+  const reviewStyles = useReviewStyles();
+  const { colors } = useTheme();
   return (
     <Surface style={reviewStyles.card}>
       <View style={reviewStyles.header}>
@@ -79,7 +87,7 @@ export function ReviewCard({ review }: { review: ReviewResponse }) {
   );
 }
 
-const reviewStyles = StyleSheet.create({
+const useReviewStyles = makeStyles(({ colors }) => ({
   card: { gap: spacing.xs, marginBottom: spacing.sm },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
   name: { flexShrink: 1 },
@@ -94,4 +102,4 @@ const reviewStyles = StyleSheet.create({
     paddingVertical: 2,
   },
   badgeText: { fontWeight: '700' },
-});
+}));

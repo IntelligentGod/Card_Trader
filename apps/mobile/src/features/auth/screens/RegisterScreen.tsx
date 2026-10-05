@@ -8,12 +8,13 @@ import { Button } from '../../../components/Button';
 import { TextField } from '../../../components/Controls';
 import { Screen } from '../../../components/Screen';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { spacing, useTheme } from '../../../theme';
 import { SocialSignInButtons } from '../components/SocialSignInButtons';
 import { completeSignIn } from '../sessionActions';
 import { hasErrors, normalizeUsername, validateRegister, type AuthFormErrors } from '../validation';
 
 export function RegisterScreen({ navigation }: RootScreenProps<'Register'>) {
+  const { colors } = useTheme();
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');

@@ -7,7 +7,7 @@ import { TextField } from '../../components/Controls';
 import { Screen } from '../../components/Screen';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { normalizeUsername } from '../auth/validation';
 import { PASSWORD_MAX, validateCreateAdmin, type CreateAdminForm } from './adminForm';
 import { useAdminCreateAdmin } from './hooks';
@@ -16,6 +16,7 @@ const EMPTY: CreateAdminForm = { email: '', username: '', displayName: '', passw
 
 /** SUPER_ADMIN: a new ADMIN account with a temporary password. */
 export function AdminCreateAdminScreen({ navigation }: RootScreenProps<'AdminCreateAdmin'>) {
+  const { colors } = useTheme();
   const [form, setForm] = useState<CreateAdminForm>(EMPTY);
   const [touched, setTouched] = useState(false);
   const create = useAdminCreateAdmin();

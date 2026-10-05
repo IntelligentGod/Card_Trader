@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 import { formatCents, type ValuePoint } from '@card-trader/shared';
-import { colors, spacing } from '../theme';
+import { spacing, useTheme } from '../theme';
 import { AppText } from './AppText';
 
 interface LineChartProps {
@@ -50,6 +50,7 @@ function formatDate(date: string): string {
 
 /** Simple, fast SVG line chart with touch scrubbing. */
 export function LineChart({ points, height = 180, testID }: LineChartProps) {
+  const { colors } = useTheme();
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
   const geometry = useMemo(() => buildChartGeometry(points, width, height), [points, width, height]);

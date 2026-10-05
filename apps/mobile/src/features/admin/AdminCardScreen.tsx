@@ -12,7 +12,7 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { formatDateLong } from '../../utils/format';
 import { REASON_MAX } from './adminForm';
 import { CATALOG_SOURCE_LABELS } from './adminText';
@@ -20,6 +20,7 @@ import { AuditEntryCard, StatTile, VerifiedBadge } from './components';
 import { useAdminCard, useAdminUpdateCard } from './hooks';
 
 function Detail({ label, value }: { label: string; value: string | null }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.detail}>
       <AppText color={colors.textMuted}>{label}</AppText>
@@ -31,6 +32,7 @@ function Detail({ label, value }: { label: string; value: string | null }) {
 }
 
 export function AdminCardScreen({ route, navigation }: RootScreenProps<'AdminCard'>) {
+  const { colors } = useTheme();
   const { cardId } = route.params;
   const card = useAdminCard(cardId);
   const update = useAdminUpdateCard(cardId);

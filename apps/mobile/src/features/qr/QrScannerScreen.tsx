@@ -10,10 +10,12 @@ import { Button } from '../../components/Button';
 import { TextField } from '../../components/Controls';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { interpretScan } from './scan';
 
 export function QrScannerScreen({ navigation }: RootScreenProps<'QrScanner'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const focused = useIsFocused();
   const ownPublicId = useSession((s) => s.user?.publicId);
@@ -103,6 +105,7 @@ export function QrScannerScreen({ navigation }: RootScreenProps<'QrScanner'>) {
 }
 
 function ManualEntry({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit: (id: string) => void }) {
+  const styles = useStyles();
   const trimmed = value.trim();
   return (
     <View style={styles.manual}>
@@ -112,7 +115,7 @@ function ManualEntry({ value, onChange, onSubmit }: { value: string; onChange: (
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   dark: { flex: 1, backgroundColor: colors.black },
   overlay: { flex: 1, justifyContent: 'space-between', alignItems: 'center', padding: spacing.xl },
   frame: { width: 250, height: 250, borderRadius: radius.lg, borderWidth: 3, borderColor: colors.white },
@@ -120,4 +123,4 @@ const styles = StyleSheet.create({
   toastPlaceholder: { height: 36 },
   permission: { flex: 1, justifyContent: 'center', padding: spacing.xl, gap: spacing.lg, backgroundColor: colors.background },
   manual: { gap: spacing.sm },
-});
+}));

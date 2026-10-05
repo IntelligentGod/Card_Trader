@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { TradeListItem } from '@card-trader/shared';
 import { queryKeys } from '../../../api/queryKeys';
@@ -10,11 +10,13 @@ import { AppText } from '../../../components/AppText';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import type { RootStackParamList, TabScreenProps } from '../../../navigation/types';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { TradeListRow } from '../components/TradeListRow';
 import { useTradeList } from '../hooks';
 
 function TradeList({ scope }: { scope: 'active' | 'history' }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const list = useTradeList(scope);
   const trades = list.data?.pages.flatMap((p) => p.data) ?? [];
@@ -57,6 +59,8 @@ function TradeList({ scope }: { scope: 'active' | 'history' }) {
 const REFRESH_ON_FOCUS = [queryKeys.trades];
 
 export function ActiveTradesScreen({ navigation }: TabScreenProps<'Trade'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   useRefreshOnFocus(REFRESH_ON_FOCUS);
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
@@ -70,8 +74,8 @@ export function ActiveTradesScreen({ navigation }: TabScreenProps<'Trade'>) {
       </View>
       <View style={styles.actions}>
         <Pressable style={styles.action} onPress={() => navigation.navigate('QrScanner')} accessibilityRole="button">
-          <Ionicons name="scan" size={20} color={colors.white} />
-          <AppText variant="bodyStrong" color={colors.white}>
+          <Ionicons name="scan" size={20} color={colors.onPrimary} />
+          <AppText variant="bodyStrong" color={colors.onPrimary}>
             Scan QR to trade
           </AppText>
         </Pressable>
@@ -92,6 +96,7 @@ export function ActiveTradesScreen({ navigation }: TabScreenProps<'Trade'>) {
 }
 
 export function TradeHistoryScreen() {
+  const styles = useStyles();
   return (
     <View style={styles.safe}>
       <TradeList scope="history" />
@@ -99,7 +104,7 @@ export function TradeHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg, paddingBottom: spacing.sm },
   actions: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
@@ -115,4 +120,4 @@ const styles = StyleSheet.create({
   },
   actionSecondary: { backgroundColor: colors.primarySoft },
   list: { padding: spacing.lg, flexGrow: 1 },
-});
+}));

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
 import { AppText } from '../../../components/AppText';
@@ -13,12 +13,14 @@ import { SocialLinksRow } from '../../../components/Social';
 import { ErrorState } from '../../../components/States';
 import { Surface } from '../../../components/Surface';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { formatEventDates } from '../../../utils/format';
 import { useMe } from '../../profile/hooks';
 import { useEvent, useEventMutation } from '../hooks';
 
 export function EventDetailsScreen({ route, navigation }: RootScreenProps<'EventDetails'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { eventId } = route.params;
   const query = useEvent(eventId);
   const me = useMe();
@@ -221,6 +223,8 @@ export function EventDetailsScreen({ route, navigation }: RootScreenProps<'Event
 }
 
 function InfoRow({ icon, text, link = false }: { icon: keyof typeof Ionicons.glyphMap; text: string; link?: boolean }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.info}>
       <Ionicons name={icon} size={18} color={link ? colors.primary : colors.textMuted} />
@@ -232,6 +236,8 @@ function InfoRow({ icon, text, link = false }: { icon: keyof typeof Ionicons.gly
 }
 
 function Stat({ value, label }: { value: number; label: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.stat}>
       <AppText variant="heading">{value}</AppText>
@@ -242,7 +248,7 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   gap: { gap: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
   flex: { flex: 1 },
@@ -270,4 +276,4 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.85 },
   table: { width: 44, alignItems: 'center' },
-});
+}));

@@ -19,7 +19,7 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { makeStyles, spacing, useTheme } from '../../theme';
 import { CATALOG_SOURCE_LABELS, formatTimestamp, USER_STATUS_LABELS } from './adminText';
 import {
   CATEGORY_SLOT,
@@ -39,6 +39,7 @@ const GRADER_LABELS: Record<GradingCompany, string> = { PSA: 'PSA', BGS: 'BGS', 
 const money = (cents: number) => formatCents(cents);
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       <AppText variant="heading">{title}</AppText>
@@ -48,6 +49,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export function AdminAnalyticsScreen({ navigation }: RootScreenProps<'AdminAnalytics'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const analytics = useAdminAnalytics();
 
   if (analytics.isPending) {
@@ -180,7 +183,7 @@ export function AdminAnalyticsScreen({ navigation }: RootScreenProps<'AdminAnaly
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   section: { gap: spacing.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   table: { paddingVertical: spacing.xs },
@@ -189,4 +192,4 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   rank: { width: 22 },
   flex: { flex: 1 },
-});
+}));

@@ -18,8 +18,6 @@ export const CHART_PALETTE = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87b
 export type ChartSlot = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const BAR_COLOR = CHART_PALETTE[0];
-export const GRID_COLOR = '#e1e0d9';
-export const AXIS_COLOR = '#898781';
 
 export function slotColor(slot: ChartSlot): string {
   return CHART_PALETTE[slot - 1] ?? CHART_PALETTE[0];

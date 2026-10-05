@@ -2,13 +2,14 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet } from 'react-n
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { useNotificationHistory } from './hooks';
 import { NotificationRow } from './NotificationRow';
 import { Separator, useMarkAllHeader, useOpenNotification } from './NotificationsScreen';
 
 /** Every notification, newest first, loaded 30 at a time. */
 export function NotificationHistoryScreen({ navigation }: RootScreenProps<'NotificationHistory'>) {
+  const { colors } = useTheme();
   const history = useNotificationHistory();
   const open = useOpenNotification(navigation);
   useMarkAllHeader(navigation);

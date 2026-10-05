@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { Pressable, ScrollView, TextInput, View, type TextInputProps } from 'react-native';
+import { makeStyles, radius, spacing, useTheme } from '../theme';
 import { AppText } from './AppText';
 
 // ───────────── Segmented control ─────────────
@@ -12,6 +12,8 @@ interface SegmentedProps<T extends string> {
 }
 
 export function Segmented<T extends string>({ options, value, onChange, testID }: SegmentedProps<T>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View testID={testID} style={styles.segmented} accessibilityRole="tablist">
       {options.map((option) => {
@@ -42,7 +44,10 @@ interface ChipProps {
   color?: string;
 }
 
-export function Chip({ label, selected, onPress, color = colors.primary }: ChipProps) {
+export function Chip({ label, selected, onPress, color: selectedColor }: ChipProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
+  const color = selectedColor ?? colors.primary;
   return (
     <Pressable
       accessibilityRole="button"
@@ -50,7 +55,7 @@ export function Chip({ label, selected, onPress, color = colors.primary }: ChipP
       onPress={onPress}
       style={[styles.chip, selected && { backgroundColor: color, borderColor: color }]}
     >
-      <AppText variant="caption" color={selected ? colors.white : colors.text} style={styles.chipText}>
+      <AppText variant="caption" color={selected ? colors.onPrimary : colors.text} style={styles.chipText}>
         {label}
       </AppText>
     </Pressable>
@@ -68,6 +73,7 @@ export function ChipRow<T extends string>({
   onChange: (value: T | undefined) => void;
   allowNone?: string;
 }) {
+  const styles = useStyles();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
       {allowNone ? <Chip label={allowNone} selected={value === undefined} onPress={() => onChange(undefined)} /> : null}
@@ -92,6 +98,8 @@ interface TextFieldProps extends TextInputProps {
 }
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField({ label, error, hint, style, ...rest }, ref) {
+  const styles = useStyles();
+  const { colors, dark } = useTheme();
   return (
     <View style={styles.field}>
       {label ? (
@@ -102,6 +110,8 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
       <TextInput
         ref={ref}
         placeholderTextColor={colors.textSubtle}
+        selectionColor={colors.primary}
+        keyboardAppearance={dark ? 'dark' : 'light'}
         {...rest}
         style={[styles.input, !!error && styles.inputError, rest.multiline && styles.multiline, style]}
       />
@@ -120,6 +130,8 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
 
 // ───────────── Section header ─────────────
 export function SectionHeader({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.sectionHeader}>
       <AppText variant="heading">{title}</AppText>
@@ -134,7 +146,7 @@ export function SectionHeader({ title, action, onAction }: { title: string; acti
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   segmented: {
     flexDirection: 'row',
     backgroundColor: colors.surfaceMuted,
@@ -160,7 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.inputBackground,
     paddingHorizontal: spacing.md,
     fontSize: 16,
     color: colors.text,
@@ -168,4 +180,4 @@ const styles = StyleSheet.create({
   inputError: { borderColor: colors.negative },
   multiline: { minHeight: 96, paddingTop: spacing.md, textAlignVertical: 'top' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
-});
+}));

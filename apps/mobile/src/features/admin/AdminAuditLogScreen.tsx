@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { ChipRow } from '../../components/Controls';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, spacing } from '../../theme';
+import { makeStyles, spacing, useTheme } from '../../theme';
 import { AUDIT_FILTERS, auditQueryFor, type AuditFilter } from './adminText';
 import { AuditEntryCard } from './components';
 import { useAdminAuditLog } from './hooks';
@@ -13,6 +13,8 @@ const CHIPS = AUDIT_FILTERS.filter((f) => f.value !== 'all').map(({ value, label
 
 /** SUPER_ADMIN: every admin action, newest first. */
 export function AdminAuditLogScreen({ navigation }: RootScreenProps<'AdminAuditLog'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [filter, setFilter] = useState<AuditFilter>('all');
   const list = useAdminAuditLog(auditQueryFor(filter));
   const entries = list.data?.pages.flatMap((p) => p.data) ?? [];
@@ -47,8 +49,8 @@ export function AdminAuditLogScreen({ navigation }: RootScreenProps<'AdminAuditL
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.lg, paddingBottom: spacing.sm },
   list: { padding: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl, flexGrow: 1 },
-});
+}));

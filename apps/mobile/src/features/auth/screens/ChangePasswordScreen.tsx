@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { errorMessage } from '../../../api/client';
 import { api } from '../../../api/endpoints';
 import { AppText } from '../../../components/AppText';
@@ -10,7 +10,7 @@ import { TextField } from '../../../components/Controls';
 import { Screen } from '../../../components/Screen';
 import type { RootScreenProps } from '../../../navigation/types';
 import { useSession } from '../../../stores/session';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { completeSignIn, signOut } from '../sessionActions';
 
 interface PasswordErrors {
@@ -33,6 +33,8 @@ export function validatePasswordChange(current: string, next: string, confirm: s
  * only screen the app shows until a new password is chosen.
  */
 export function ChangePasswordScreen({ navigation }: RootScreenProps<'ChangePassword'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const user = useSession((s) => s.user);
   const forced = !!user?.mustChangePassword;
   const setting = !forced && user?.hasPassword === false;
@@ -124,7 +126,7 @@ export function ChangePasswordScreen({ navigation }: RootScreenProps<'ChangePass
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   notice: {
     flexDirection: 'row',
@@ -134,4 +136,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
   },
-});
+}));

@@ -10,10 +10,12 @@ import { API_URL, APP_VERSION } from '../../config';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
 import { useUiPrefs } from '../../stores/uiPrefs';
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { signOut } from '../auth/sessionActions';
+import { ThemeSelector } from './ThemeSelector';
 
 export function SettingsScreen({ navigation }: RootScreenProps<'Settings'>) {
+  const { colors } = useTheme();
   const user = useSession((s) => s.user);
   const offline = useSession((s) => s.offline);
   const range = useUiPrefs((s) => s.chartRange);
@@ -35,6 +37,13 @@ export function SettingsScreen({ navigation }: RootScreenProps<'Settings'>) {
           onPress={() => navigation.navigate('Security')}
         />
         <LinkRow icon="help-circle-outline" label="Help Center" onPress={() => navigation.navigate('HelpCenter')} />
+      </Surface>
+
+      <Surface style={styles.group}>
+        <AppText variant="label" color={colors.textMuted}>
+          Appearance
+        </AppText>
+        <ThemeSelector />
       </Surface>
 
       <Surface style={styles.group}>
@@ -81,6 +90,7 @@ function LinkRow({
   onPress: () => void;
   testID?: string;
 }) {
+  const { colors } = useTheme();
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]} accessibilityRole="button" testID={testID}>
       <Ionicons name={icon} size={20} color={colors.primary} />
@@ -98,6 +108,7 @@ function LinkRow({
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
       <AppText color={colors.textMuted}>{label}</AppText>

@@ -13,7 +13,7 @@ import { ListingBadge } from '../../../components/ListingBadge';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
-import { colors, spacing } from '../../../theme';
+import { makeStyles, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
 import { invalidateCollection, useCollectionList } from '../../collection/hooks';
 
@@ -22,6 +22,8 @@ import { invalidateCollection, useCollectionList } from '../../collection/hooks'
  * listed for trade and/or sale qualify; nothing is copied.
  */
 export function EventInventoryScreen({ route, navigation }: RootScreenProps<'EventInventory'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { eventId } = route.params;
   const client = useQueryClient();
   const current = useQuery({ queryKey: queryKeys.eventMyInventory(eventId), queryFn: () => api.events.myInventory(eventId) });
@@ -139,7 +141,7 @@ export function EventInventoryScreen({ route, navigation }: RootScreenProps<'Eve
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   container: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.lg, flexGrow: 1 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
@@ -152,4 +154,4 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
   },
-});
+}));

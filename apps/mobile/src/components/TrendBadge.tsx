@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 import { formatPercent, formatSignedCents } from '@card-trader/shared';
-import { colors, radius, spacing } from '../theme';
+import { radius, spacing, useTheme, type ThemeColors } from '../theme';
 import { AppText } from './AppText';
 
 interface TrendBadgeProps {
@@ -11,7 +11,7 @@ interface TrendBadgeProps {
   size?: 'sm' | 'md';
 }
 
-export function trendColors(value: number) {
+export function trendColors(value: number, colors: ThemeColors) {
   if (value > 0) return { fg: colors.positive, bg: colors.positiveSoft, icon: 'trending-up' as const };
   if (value < 0) return { fg: colors.negative, bg: colors.negativeSoft, icon: 'trending-down' as const };
   return { fg: colors.textMuted, bg: colors.surfaceMuted, icon: 'remove' as const };
@@ -20,7 +20,8 @@ export function trendColors(value: number) {
 /** Green/red movement indicator: "+$120 · +8.2% this month". */
 export function TrendBadge({ amountCents, percent, suffix, size = 'md' }: TrendBadgeProps) {
   const direction = amountCents ?? percent ?? 0;
-  const c = trendColors(direction);
+  const { colors } = useTheme();
+  const c = trendColors(direction, colors);
   const parts = [amountCents !== undefined ? formatSignedCents(amountCents) : null, percent !== null ? formatPercent(percent) : null]
     .filter(Boolean)
     .join(' · ');

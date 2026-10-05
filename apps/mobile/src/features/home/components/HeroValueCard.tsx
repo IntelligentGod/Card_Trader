@@ -5,7 +5,7 @@ import { formatCents, formatPercent, formatSignedCents, type PortfolioSummary } 
 import { AppText } from '../../../components/AppText';
 import { SkeletonBlock } from '../../../components/Skeleton';
 import { ErrorState } from '../../../components/States';
-import { colors, radius, spacing } from '../../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 
 interface HeroValueCardProps {
   summary: PortfolioSummary | undefined;
@@ -17,6 +17,8 @@ interface HeroValueCardProps {
 
 /** Blue gradient banner with the collection value, today / 30-day movement, and a link to the inventory. */
 export function HeroValueCard({ summary, loading, error, onRetry, onViewInventory }: HeroValueCardProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.card}>
       <HeroBackdrop />
@@ -59,6 +61,8 @@ export function HeroValueCard({ summary, loading, error, onRetry, onViewInventor
 }
 
 function ChangePill({ amountCents, percent, suffix }: { amountCents: number; percent: number | null; suffix: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const tone = amountCents > 0 ? colors.positive : amountCents < 0 ? colors.negative : colors.textMuted;
   const icon = amountCents > 0 ? 'trending-up' : amountCents < 0 ? 'trending-down' : 'remove';
   return (
@@ -77,13 +81,15 @@ function ChangePill({ amountCents, percent, suffix }: { amountCents: number; per
  * a fan of trading cards and sparkles on the right-hand side.
  */
 function HeroBackdrop() {
+  const { hero } = useTheme();
+  const [from, via, to] = hero.gradient;
   return (
     <Svg style={StyleSheet.absoluteFill} viewBox="0 0 360 190" preserveAspectRatio="xMaxYMid slice" pointerEvents="none">
       <Defs>
         <LinearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#3D5BF0" />
-          <Stop offset="0.6" stopColor="#4F86F7" />
-          <Stop offset="1" stopColor="#7DB8FF" />
+          <Stop offset="0" stopColor={from} />
+          <Stop offset="0.6" stopColor={via} />
+          <Stop offset="1" stopColor={to} />
         </LinearGradient>
         <LinearGradient id="cardA" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#FFD84D" />
@@ -132,12 +138,12 @@ function Sparkle({ x, y, size }: { x: number; y: number; size: number }) {
   return <Path d={`M${x} ${y - s} L${x + k} ${y - k} L${x + s} ${y} L${x + k} ${y + k} L${x} ${y + s} L${x - k} ${y + k} L${x - s} ${y} L${x - k} ${y - k} Z`} fill="#FFFFFF" opacity={0.9} />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, hero }) => ({
   card: {
     borderRadius: radius.lg + 2,
     overflow: 'hidden',
-    backgroundColor: '#4F86F7',
-    shadowColor: '#2F4FD8',
+    backgroundColor: hero.gradient[1],
+    shadowColor: hero.glow,
     shadowOpacity: 0.25,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -168,4 +174,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
   },
   pressed: { opacity: 0.85 },
-});
+}));

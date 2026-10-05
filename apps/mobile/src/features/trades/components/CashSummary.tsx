@@ -6,7 +6,7 @@ import { AppText } from '../../../components/AppText';
 import { Button } from '../../../components/Button';
 import { Segmented, TextField } from '../../../components/Controls';
 import { Surface } from '../../../components/Surface';
-import { colors, spacing } from '../../../theme';
+import { spacing, useTheme } from '../../../theme';
 import { describeCash, describeDifference, sidesFor } from '../tradeText';
 
 interface CashSummaryProps {
@@ -20,6 +20,7 @@ interface CashSummaryProps {
 type PayerChoice = 'ME' | 'THEM' | 'NONE';
 
 export function CashSummary({ trade, editable, saving, error, onSave }: CashSummaryProps) {
+  const { colors } = useTheme();
   const [editing, setEditing] = useState(false);
   const { theirs } = sidesFor(trade);
   const otherRole: TradeRole = trade.myRole === 'INITIATOR' ? 'COUNTERPARTY' : 'INITIATOR';

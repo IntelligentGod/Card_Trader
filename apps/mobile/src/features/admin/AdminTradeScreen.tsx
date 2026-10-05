@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { formatCents, TRADE_STATUS_LABELS, type AdminTradeDetail, type TradeParticipantResponse } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
 import { Avatar, ReviewCard } from '../../components/Profile';
@@ -8,13 +8,15 @@ import { SkeletonBlock } from '../../components/Skeleton';
 import { ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
 import type { RootScreenProps } from '../../navigation/types';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, radius, spacing, useTheme } from '../../theme';
 import { TradeSide } from '../trades/components/TradeSide';
 import { adminCashText, formatTimestamp } from './adminText';
 import { TRADE_STATUS_COLOR } from './components';
 import { useAdminTrade } from './hooks';
 
 function Line({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={styles.line}>
       <AppText color={colors.textMuted}>{label}</AppText>
@@ -26,6 +28,8 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
 }
 
 function Participant({ side, label, onPress }: { side: TradeParticipantResponse; label: string; onPress: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { user } = side;
   return (
     <Pressable style={({ pressed }) => [styles.participant, pressed && styles.pressed]} onPress={onPress} accessibilityRole="button">
@@ -60,6 +64,8 @@ function timeline(trade: AdminTradeDetail): { label: string; at: string }[] {
 }
 
 export function AdminTradeScreen({ route, navigation }: RootScreenProps<'AdminTrade'>) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { tradeId } = route.params;
   const trade = useAdminTrade(tradeId);
 
@@ -84,7 +90,7 @@ export function AdminTradeScreen({ route, navigation }: RootScreenProps<'AdminTr
     <Screen refreshing={trade.isRefetching} onRefresh={() => void trade.refetch()}>
       <Surface style={styles.group}>
         <View style={styles.statusRow}>
-          <AppText variant="heading" color={TRADE_STATUS_COLOR[data.status]}>
+          <AppText variant="heading" color={TRADE_STATUS_COLOR(colors)[data.status]}>
             {TRADE_STATUS_LABELS[data.status]}
           </AppText>
           <AppText variant="caption" color={colors.textSubtle} selectable>
@@ -169,7 +175,7 @@ export function AdminTradeScreen({ route, navigation }: RootScreenProps<'AdminTr
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
   group: { gap: spacing.sm },
   statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
@@ -186,4 +192,4 @@ const styles = StyleSheet.create({
   line: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.lg },
   lineValue: { flexShrink: 1, textAlign: 'right' },
   reviewsTitle: { marginBottom: spacing.sm },
-});
+}));

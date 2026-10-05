@@ -4,7 +4,7 @@ import type { TwoFactorProofRequest } from '@card-trader/shared';
 import { AppText } from '../../../components/AppText';
 import { Button } from '../../../components/Button';
 import { TextField } from '../../../components/Controls';
-import { colors, spacing } from '../../../theme';
+import { spacing, useTheme } from '../../../theme';
 import { isCompleteOtp, isCompleteRecoveryCode, normalizeOtp, normalizeRecoveryCode, twoFactorProof } from '../twoFactor';
 
 interface Props {
@@ -19,6 +19,7 @@ interface Props {
 
 /** 6-digit authenticator code, or a recovery code. Submits by itself once 6 digits are in. */
 export function TwoFactorCodeForm({ submitLabel, onSubmit, loading, error, allowRecovery = true, testID = 'two-factor' }: Props) {
+  const { colors } = useTheme();
   const [mode, setMode] = useState<'code' | 'recovery'>('code');
   const [value, setValue] = useState('');
   const complete = mode === 'code' ? isCompleteOtp(value) : isCompleteRecoveryCode(value);
