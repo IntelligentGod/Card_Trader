@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useDeferredValue, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -32,17 +32,18 @@ const SORTS: { value: CollectionSort; label: string }[] = [
   { value: 'name', label: 'Name' },
 ];
 
-const CATEGORY_OPTIONS = CARD_CATEGORIES.map((c) => {
-  const { categoryColors } = useTheme();
-  return ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main });
-});
 const STATUS_OPTIONS = LISTING_STATUSES.map((s) => ({ value: s, label: LISTING_STATUS_LABELS[s] }));
 
 const REFRESH_ON_FOCUS = [queryKeys.collection, queryKeys.portfolio];
 
 export function MyCollectionScreen({ navigation }: TabScreenProps<'Inventory'>) {
   const styles = useStyles();
-  const { colors } = useTheme();
+  const { colors, categoryColors } = useTheme();
+  // Built from the active theme, so it lives in the component (hooks can't run at module level).
+  const categoryOptions = useMemo(
+    () => CARD_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main })),
+    [categoryColors],
+  );
   useRefreshOnFocus(REFRESH_ON_FOCUS);
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
@@ -74,7 +75,7 @@ export function MyCollectionScreen({ navigation }: TabScreenProps<'Inventory'>) 
       <View style={styles.header}>
         <AppText variant="title">Inventory</AppText>
         <TextField placeholder="Search your cards" value={search} onChangeText={setSearch} returnKeyType="search" />
-        <ChipRow options={CATEGORY_OPTIONS} value={category} onChange={setCategory} allowNone="All" />
+        <ChipRow options={categoryOptions} value={category} onChange={setCategory} allowNone="All" />
         <ChipRow options={STATUS_OPTIONS} value={listingStatus} onChange={setListingStatus} allowNone="Any status" />
         <ChipRow options={SORTS} value={sort} onChange={(value) => setSort(value ?? 'newest')} />
       </View>

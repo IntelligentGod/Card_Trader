@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useDeferredValue, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { CARD_CATEGORIES, CATEGORY_LABELS, type CardCategory, type CardSummary } from '@card-trader/shared';
 import { api } from '../../../api/endpoints';
@@ -16,14 +16,14 @@ import { cardSubtitle } from '../../../utils/format';
 import { CollectionItemForm } from '../components/CollectionItemForm';
 import { useCreateItem } from '../hooks';
 
-const CATEGORY_OPTIONS = CARD_CATEGORIES.map((c) => {
-  const { categoryColors } = useTheme();
-  return ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main });
-});
-
 export function AddCardScreen({ navigation }: RootScreenProps<'AddCard'>) {
   const styles = useStyles();
-  const { colors } = useTheme();
+  const { colors, categoryColors } = useTheme();
+  // Built from the active theme, so it lives in the component (hooks can't run at module level).
+  const categoryOptions = useMemo(
+    () => CARD_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c], color: categoryColors[c].main })),
+    [categoryColors],
+  );
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
   const [category, setCategory] = useState<CardCategory | undefined>();
@@ -81,7 +81,7 @@ export function AddCardScreen({ navigation }: RootScreenProps<'AddCard'>) {
           autoFocus
           returnKeyType="search"
         />
-        <ChipRow options={CATEGORY_OPTIONS} value={category} onChange={setCategory} allowNone="All" />
+        <ChipRow options={categoryOptions} value={category} onChange={setCategory} allowNone="All" />
       </View>
       {results.isPending ? (
         <SkeletonList rows={5} />

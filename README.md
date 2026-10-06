@@ -108,20 +108,26 @@ or revoking takes effect immediately, without signing in again.
 
 ## Android build (APK / Android Studio)
 
+Needs Java 17 and the Android SDK; the script finds both in their default locations.
+
 ```bash
-npm run build:android                                          # APK for the emulator (API at 10.0.2.2)
-npm run build:android -- -ApiUrl http://192.168.1.20:3000/api/v1   # APK for a real phone on your Wi-Fi
+npm run build:android                                              # APK for the production server (https://slabstorm.com)
+npm run build:android -- -Clean                                    # same, rebuilt from scratch
+npm run build:android -- -ApiUrl http://192.168.1.20:3000/api/v1   # APK for a dev API on your PC (phone on the same Wi-Fi)
+npm run build:android -- -ApiUrl http://10.0.2.2:3000/api/v1       # APK for the Android emulator
 ```
 
-The APK lands in `build-output/CardTrader-release.apk`; install it with
-`adb install -r build-output\CardTrader-release.apk`. It is a standalone
-build (no Expo Go, no dev server) — only the API needs to be running.
+The APK lands in `build-output/CardTrader-release.apk`; copy it to the phone and
+open it, or `adb install -r build-output\CardTrader-release.apk`. It is a standalone
+build (no Expo Go, no dev server) — only the API needs to be running. When a build
+fails, the cause is under the first `What went wrong` in the output.
 
-To work in **Android Studio**, open `apps/mobile/android` through a short
-drive letter (`subst X: "<repo path>"`, then open `X:\apps\mobile\android`):
-the C++ build fails on Windows' 260-character path limit when the repo is in
-a long folder. Set *Settings → Build Tools → Gradle → Gradle JDK* to Java 17.
-Debug builds load JavaScript from Metro, so run `npm run mobile` alongside.
+Keep the repo in a short folder such as `C:\Projects\Card_Trader`: the C++ build
+fails on Windows' 260-character path limit in long ones. Don't build through a
+`subst` drive — React Native's codegen then fails with "different roots". In
+**Android Studio**, open `apps/mobile/android` and set *Settings → Build Tools →
+Gradle → Gradle JDK* to Java 17. Debug builds load JavaScript from Metro, so run
+`npm run mobile` alongside.
 
 ## Tests
 
