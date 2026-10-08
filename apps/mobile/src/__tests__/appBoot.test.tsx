@@ -16,6 +16,7 @@ const mockMe: MeResponse = {
   emailVerified: true,
   twoFactorEnabled: false,
   mustChangePassword: false,
+  hasFullAccess: true,
   hasPassword: true,
   authProviders: ['PASSWORD'],
   username: 'tom',
@@ -99,6 +100,20 @@ describe('App boots on the phone', () => {
       await act(async () => fireEvent.press(tab(name)));
       expect(tab(name)).toBeTruthy();
     }
+  });
+
+  it('signed in without the unlock: shows the purchase screen, and the app once the account is unlocked', async () => {
+    await SecureStore.setItemAsync('ct.refreshToken', 'refresh-token');
+    await boot();
+    expect(await screen.findByText(/Tom/)).toBeTruthy();
+
+    await act(async () => useSession.getState().setUser({ ...mockMe, hasFullAccess: false }));
+    expect(await screen.findByText('Unlock Card Trader')).toBeTruthy();
+    expect(screen.queryAllByRole('button', { name: 'Inventory' })).toHaveLength(0);
+
+    await act(async () => useSession.getState().setUser({ ...mockMe, hasFullAccess: true }));
+    expect(await screen.findByText(/Tom/)).toBeTruthy();
+    expect(screen.queryByText('Unlock Card Trader')).toBeNull();
   });
 
   it('signed in with Dark Mode saved: boots in Dark Mode', async () => {

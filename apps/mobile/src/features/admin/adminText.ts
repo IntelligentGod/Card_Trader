@@ -12,6 +12,7 @@ import {
   type TradeCash,
   type UserRole,
   type UserStatus,
+  type PaidVia,
 } from '@card-trader/shared';
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
@@ -91,6 +92,16 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   CARD_VERIFIED: 'Card verified',
   CARD_UNVERIFIED: 'Card unverified',
   ANNOUNCEMENT_SENT: 'Announcement sent',
+  ACCESS_GRANTED: 'Full access granted',
+  ACCESS_REVOKED: 'Full access revoked',
+};
+
+/** Where an account's one-time unlock came from. */
+export const PAID_VIA_LABELS: Record<PaidVia, string> = {
+  APP_STORE: 'App Store purchase',
+  PLAY_STORE: 'Google Play purchase',
+  ADMIN: 'Granted by an admin',
+  SEED: 'Demo account',
 };
 
 export type AuditFilter = 'all' | 'accounts' | 'blocks' | 'passwords' | 'adminsAdded' | 'roles' | 'cards' | 'announcements';

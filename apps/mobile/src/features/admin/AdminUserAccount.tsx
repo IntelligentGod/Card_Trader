@@ -9,8 +9,8 @@ import { Surface } from '../../components/Surface';
 import type { RootStackParamList } from '../../navigation/types';
 import { spacing, useTheme } from '../../theme';
 import { adminUserActions, hasAnyAction } from './adminForm';
-import { formatTimestamp, signInMethodsText, USER_ROLE_LABELS, USER_STATUS_LABELS, yesNo } from './adminText';
-import { useAdminBlock, useAdminChangeRole } from './hooks';
+import { formatTimestamp, PAID_VIA_LABELS, signInMethodsText, USER_ROLE_LABELS, USER_STATUS_LABELS, yesNo } from './adminText';
+import { useAdminAccess, useAdminBlock, useAdminChangeRole } from './hooks';
 import { ReasonModal } from './ReasonModal';
 
 function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
@@ -40,6 +40,12 @@ export function AccountSection({ user }: { user: AdminUserDetail }) {
       <Row label="Status" value={USER_STATUS_LABELS[user.status]} tone={blocked ? colors.negative : undefined} />
       {blocked && user.blockedAt ? <Row label="Blocked since" value={formatTimestamp(user.blockedAt)} /> : null}
       {blocked && user.blockReason ? <Row label="Block reason" value={user.blockReason} /> : null}
+      <Row
+        label="Full access"
+        value={user.paidVia ? PAID_VIA_LABELS[user.paidVia] : user.hasFullAccess ? 'Included with role' : 'Not unlocked'}
+        tone={user.hasFullAccess ? undefined : colors.warning}
+      />
+      {user.paidAt ? <Row label="Unlocked" value={formatTimestamp(user.paidAt)} /> : null}
       <Row label="2FA enabled" value={yesNo(user.twoFactorEnabled)} />
       <Row label="Sign-in methods" value={signInMethodsText(user.authProviders)} />
       {user.mustChangePassword ? <Row label="Password" value="Must change at next sign-in" tone={colors.warning} /> : null}
@@ -49,7 +55,7 @@ export function AccountSection({ user }: { user: AdminUserDetail }) {
   );
 }
 
-type Dialog = 'role' | 'block' | 'unblock' | null;
+type Dialog = 'role' | 'block' | 'unblock' | 'grant' | 'revoke' | null;
 
 /** Only the actions the server says this admin may take (`permissions`); the API enforces the same. */
 export function AccountActions({ user }: { user: AdminUserDetail }) {
@@ -60,6 +66,8 @@ export function AccountActions({ user }: { user: AdminUserDetail }) {
   const changeRole = useAdminChangeRole(user.publicId);
   const block = useAdminBlock(user.publicId, true);
   const unblock = useAdminBlock(user.publicId, false);
+  const grant = useAdminAccess(user.publicId, true);
+  const revoke = useAdminAccess(user.publicId, false);
 
   if (!hasAnyAction(actions)) return null;
 
@@ -68,6 +76,8 @@ export function AccountActions({ user }: { user: AdminUserDetail }) {
     changeRole.reset();
     block.reset();
     unblock.reset();
+    grant.reset();
+    revoke.reset();
   };
   const done = { onSuccess: () => setDialog(null) };
   const makeAdmin = actions.changeRoleTo === 'ADMIN';
@@ -104,6 +114,12 @@ export function AccountActions({ user }: { user: AdminUserDetail }) {
           testID="action-reset"
         />
       ) : null}
+      {actions.grantAccess ? (
+        <Button title="Grant full access" icon="lock-open-outline" variant="secondary" onPress={() => setDialog('grant')} testID="action-grant" />
+      ) : null}
+      {actions.revokeAccess ? (
+        <Button title="Revoke full access" icon="lock-closed-outline" variant="secondary" onPress={() => setDialog('revoke')} testID="action-revoke" />
+      ) : null}
       {actions.block ? (
         <Button title="Block user" icon="ban-outline" variant="danger" onPress={() => setDialog('block')} testID="action-block" />
       ) : null}
@@ -136,6 +152,27 @@ export function AccountActions({ user }: { user: AdminUserDetail }) {
         error={block.error}
         onClose={close}
         onConfirm={(reason) => block.mutate({ reason }, done)}
+      />
+      <ReasonModal
+        visible={dialog === 'grant'}
+        title={`Unlock Card Trader for ${user.displayName}?`}
+        message="They get every feature without buying the one-time unlock. A store refund never removes an admin grant."
+        confirmTitle="Grant access"
+        loading={grant.isPending}
+        error={grant.error}
+        onClose={close}
+        onConfirm={(reason) => grant.mutate({ reason }, done)}
+      />
+      <ReasonModal
+        visible={dialog === 'revoke'}
+        title={`Revoke ${user.displayName}’s full access?`}
+        message="The unlock screen shows again on their next request. If they bought the unlock in a store, refund it there as well."
+        confirmTitle="Revoke access"
+        destructive
+        loading={revoke.isPending}
+        error={revoke.error}
+        onClose={close}
+        onConfirm={(reason) => revoke.mutate({ reason }, done)}
       />
       <ReasonModal
         visible={dialog === 'unblock'}

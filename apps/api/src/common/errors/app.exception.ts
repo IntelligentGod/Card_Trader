@@ -27,4 +27,7 @@ export const Errors = {
   unprocessable: (code: string, message: string, details?: unknown) =>
     new AppException(HttpStatus.UNPROCESSABLE_ENTITY, code, message, details),
   tooManyRequests: (code: string, message: string) => new AppException(HttpStatus.TOO_MANY_REQUESTS, code, message),
+  /** the one-time unlock hasn't been bought; the app shows the purchase screen on this code */
+  paymentRequired: (message = 'Unlock Card Trader to continue') => new AppException(HttpStatus.PAYMENT_REQUIRED, 'PAYMENT_REQUIRED', message),
+  serviceUnavailable: (code: string, message: string) => new AppException(HttpStatus.SERVICE_UNAVAILABLE, code, message),
 };

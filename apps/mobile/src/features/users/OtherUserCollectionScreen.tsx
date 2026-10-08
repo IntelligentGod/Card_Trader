@@ -20,6 +20,7 @@ import { ChipRow, Segmented, TextField } from '../../components/Controls';
 import { ListingBadge } from '../../components/ListingBadge';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import type { RootScreenProps } from '../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../theme';
 import { cardSubtitle } from '../../utils/format';
@@ -74,6 +75,7 @@ export function OtherUserCollectionScreen({ route, navigation }: RootScreenProps
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         <TextField placeholder="Search their cards" value={search} onChangeText={setSearch} />
         <ChipRow

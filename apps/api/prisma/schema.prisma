@@ -145,6 +145,10 @@ model User {
   mustChangePassword       Boolean   @default(false)
   /// Invisible in the admin console to every other admin, including super admins (the owner account).
   hiddenFromAdmins         Boolean   @default(false)
+  /// one-time unlock: set by a store purchase (through RevenueCat) or an admin grant; null = not bought
+  paidAt                   DateTime?
+  /// APP_STORE | PLAY_STORE | ADMIN | SEED
+  paidVia                  String?   @db.VarChar(20)
   /// access tokens issued before this are rejected
   passwordChangedAt        DateTime?
   lastLoginAt              DateTime?

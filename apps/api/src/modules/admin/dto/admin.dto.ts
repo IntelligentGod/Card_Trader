@@ -20,6 +20,7 @@ import {
   USERNAME_PATTERN,
   UserRole,
   UserStatus,
+  type AdminAccessRequest,
   type AdminAuditQuery,
   type AdminBlockRequest,
   type AdminBroadcastRequest,
@@ -117,6 +118,8 @@ export class AdminResetPasswordDto extends ReasonDto implements AdminResetPasswo
 }
 
 export class AdminBlockDto extends ReasonDto implements AdminBlockRequest {}
+
+export class AdminAccessDto extends ReasonDto implements AdminAccessRequest {}
 
 export class AdminCreateAdminDto implements AdminCreateAdminRequest {
   @ApiProperty({ maxLength: 254 })

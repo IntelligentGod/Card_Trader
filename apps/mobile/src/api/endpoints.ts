@@ -1,4 +1,6 @@
 import type {
+  AdminAccessRequest,
+  BillingStatusResponse,
   AddTradeItemRequest,
   AdminAnalytics,
   AdminAuditEntry,
@@ -138,6 +140,12 @@ export const api = {
       apiRequest<MeResponse>(`/auth/providers/${provider}`, { method: 'DELETE' }),
   },
 
+  /** The one-time unlock (see docs/PAYMENTS.md). Reachable before paying. */
+  billing: {
+    status: () => apiRequest<BillingStatusResponse>('/billing/status'),
+    /** the server confirms the purchase with the store and answers with the refreshed profile */
+    sync: () => apiRequest<MeResponse>('/billing/sync', { method: 'POST' }),
+  },
   users: {
     me: () => apiRequest<MeResponse>('/users/me'),
     updateMe: (body: UpdateMeRequest) => apiRequest<MeResponse>('/users/me', { method: 'PATCH', body }),
@@ -289,6 +297,10 @@ export const api = {
       apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/role`, { method: 'PATCH', body }),
     resetPassword: (publicId: string, body: AdminResetPasswordRequest) =>
       apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/reset-password`, { method: 'POST', body }),
+    grantAccess: (publicId: string, body: AdminAccessRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/grant-access`, { method: 'POST', body }),
+    revokeAccess: (publicId: string, body: AdminAccessRequest) =>
+      apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/revoke-access`, { method: 'POST', body }),
     block: (publicId: string, body: AdminBlockRequest) =>
       apiRequest<AdminUserDetail>(`/admin/users/${encodeURIComponent(publicId)}/block`, { method: 'POST', body }),
     unblock: (publicId: string, body: AdminBlockRequest) =>

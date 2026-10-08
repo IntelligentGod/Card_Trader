@@ -88,6 +88,8 @@ interface SessionHandlers {
   onPasswordChangeRequired: () => void;
   /** the access token was revoked (e.g. password changed elsewhere) and refresh failed */
   onSessionEnded: (message: string) => void;
+  /** 402: the account hasn't bought the unlock — refetch /users/me so the unlock screen shows */
+  onPaymentRequired: () => void;
 }
 
 let sessionHandlers: Partial<SessionHandlers> = {};
@@ -97,6 +99,10 @@ export function registerSessionHandlers(handlers: SessionHandlers): void {
 }
 
 function reportSessionError(error: ApiError): void {
+  if (error.status === 402 && error.code === 'PAYMENT_REQUIRED') {
+    sessionHandlers.onPaymentRequired?.();
+    return;
+  }
   if (error.status !== 403) return;
   if (ACCOUNT_CLOSED_CODES.has(error.code)) sessionHandlers.onAccountClosed?.(error.message);
   else if (error.code === 'PASSWORD_CHANGE_REQUIRED') sessionHandlers.onPasswordChangeRequired?.();

@@ -98,9 +98,11 @@ describe('admin account actions', () => {
       resetPassword: true,
       block: true,
       unblock: false,
+      grantAccess: true,
+      revokeAccess: false,
     });
     const nothing = adminUserActions({ role: 'ADMIN', status: 'ACTIVE', permissions: none });
-    expect(nothing).toEqual({ edit: false, changeRoleTo: null, resetPassword: false, block: false, unblock: false });
+    expect(nothing).toEqual({ edit: false, changeRoleTo: null, resetPassword: false, block: false, unblock: false, grantAccess: false, revokeAccess: false });
     expect(hasAnyAction(nothing)).toBe(false);
   });
 
@@ -114,6 +116,14 @@ describe('admin account actions', () => {
     // nobody is offered a role change on the super admin, and disabled accounts get neither block nor unblock
     expect(adminUserActions({ role: 'SUPER_ADMIN', status: 'ACTIVE', permissions: all }).changeRoleTo).toBeNull();
     expect(adminUserActions({ role: 'USER', status: 'DISABLED', permissions: all })).toMatchObject({ block: false, unblock: false });
+  });
+
+  it('offers the one-time unlock only where it matters', () => {
+    // granting needs the same permission as blocking, and only USER accounts can lack access
+    expect(adminUserActions({ role: 'USER', status: 'ACTIVE', permissions: all, paidAt: null })).toMatchObject({ grantAccess: true, revokeAccess: false });
+    expect(adminUserActions({ role: 'USER', status: 'ACTIVE', permissions: all, paidAt: '2026-10-07T00:00:00Z' })).toMatchObject({ grantAccess: false, revokeAccess: true });
+    expect(adminUserActions({ role: 'ADMIN', status: 'ACTIVE', permissions: all, paidAt: null })).toMatchObject({ grantAccess: false, revokeAccess: false });
+    expect(adminUserActions({ role: 'USER', status: 'ACTIVE', permissions: { ...all, block: false }, paidAt: null })).toMatchObject({ grantAccess: false });
   });
 });
 

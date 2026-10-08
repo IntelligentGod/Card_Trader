@@ -8,6 +8,7 @@ import { Segmented, TextField } from '../../../components/Controls';
 import { EventCard } from '../../../components/EventCard';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import type { TabScreenProps } from '../../../navigation/types';
 import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { useEventList } from '../hooks';
@@ -35,6 +36,7 @@ export function EventsScreen({ navigation }: TabScreenProps<'Events'>) {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
+      <ScreenBackground />
       <View style={styles.header}>
         <AppText variant="title">Events</AppText>
         <TextField placeholder="Search shows, venues or cities" value={search} onChangeText={setSearch} returnKeyType="search" />

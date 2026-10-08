@@ -194,7 +194,26 @@ export interface MeResponse {
   hasPassword: boolean;
   /** sign-in methods linked to the account */
   authProviders: AuthProviderType[];
+  /** false only while the paywall is on and this USER account hasn't bought (or been granted) the one-time unlock */
+  hasFullAccess: boolean;
   createdAt: string;
+}
+
+// ───────────── Billing (one-time unlock) ─────────────
+
+/** Where the unlock came from. */
+export type PaidVia = 'APP_STORE' | 'PLAY_STORE' | 'ADMIN' | 'SEED';
+
+export interface BillingStatusResponse {
+  hasFullAccess: boolean;
+  /** false before the store products exist: everyone has access then */
+  paywallEnabled: boolean;
+  /** the server can confirm purchases with RevenueCat */
+  storeConfigured: boolean;
+  /** RevenueCat entitlement the app checks (full_access) */
+  entitlementId: string;
+  paidAt: string | null;
+  paidVia: PaidVia | null;
 }
 
 export interface UpdateMeRequest {
@@ -744,6 +763,7 @@ export interface AdminUserListItem {
   tradeCount: number;
   emailVerified: boolean;
   twoFactorEnabled: boolean;
+  hasFullAccess: boolean;
   lastLoginAt: string | null;
   createdAt: string;
 }
@@ -795,6 +815,9 @@ export interface AdminUserDetail {
   authProviders: AuthProviderType[];
   blockedAt: string | null;
   blockReason: string | null;
+  hasFullAccess: boolean;
+  paidAt: string | null;
+  paidVia: PaidVia | null;
   /** what the signed-in admin may do to this account (the API enforces the same rules) */
   permissions: AdminUserPermissions;
   createdAt: string;
@@ -871,6 +894,11 @@ export interface AdminResetPasswordRequest {
   reason?: string | null;
 }
 
+/** Grant / revoke the one-time unlock from the admin console. */
+export interface AdminAccessRequest {
+  reason?: string | null;
+}
+
 export interface AdminBlockRequest {
   reason?: string | null;
 }
@@ -917,7 +945,7 @@ export interface AdminAuditEntry {
   /**
    * USER_UPDATED, USER_DISABLED, USER_ENABLED, USER_PASSWORD_RESET, VENDOR_UPDATED,
    * ADMIN_CREATED, ADMIN_REMOVED, ADMIN_ROLE_CHANGED, ADMIN_DISABLED, ADMIN_ENABLED,
-   * CARD_UPDATED, CARD_VERIFIED, CARD_UNVERIFIED, ANNOUNCEMENT_SENT
+   * CARD_UPDATED, CARD_VERIFIED, CARD_UNVERIFIED, ANNOUNCEMENT_SENT, ACCESS_GRANTED, ACCESS_REVOKED
    */
   action: string;
   targetType: AdminTargetType;

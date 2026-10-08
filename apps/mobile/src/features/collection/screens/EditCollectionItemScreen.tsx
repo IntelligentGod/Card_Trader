@@ -5,6 +5,7 @@ import { ErrorState } from '../../../components/States';
 import type { RootScreenProps } from '../../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../../theme';
 import { CollectionItemForm } from '../components/CollectionItemForm';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import { useCollectionItem, useUpdateItem } from '../hooks';
 
 export function EditCollectionItemScreen({ route, navigation }: RootScreenProps<'EditCollectionItem'>) {
@@ -20,6 +21,7 @@ export function EditCollectionItemScreen({ route, navigation }: RootScreenProps<
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScreenBackground />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <AppText variant="heading">{data.card.name}</AppText>
         {data.lockedInTrade ? (
@@ -54,5 +56,5 @@ export function EditCollectionItemScreen({ route, navigation }: RootScreenProps<
 
 const useStyles = makeStyles(({ colors }) => ({
   flex: { flex: 1 },
-  container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl, backgroundColor: colors.background },
+  container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
 }));

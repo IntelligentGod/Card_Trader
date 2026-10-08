@@ -4,6 +4,7 @@ import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { MARKET_VALUE_DISCLAIMER } from '@card-trader/shared';
 import { makeStyles, spacing, useTheme } from '../theme';
 import { AppText } from './AppText';
+import { ScreenBackground } from './ScreenBackground';
 
 interface ScreenProps {
   children: ReactNode;
@@ -21,6 +22,7 @@ export function Screen({ children, scroll = true, refreshing = false, onRefresh,
   const { colors } = useTheme();
   return (
     <SafeAreaView edges={edges} style={styles.safe}>
+      <ScreenBackground />
       {scroll ? (
         <ScrollView
           contentContainerStyle={[styles.content, contentStyle]}

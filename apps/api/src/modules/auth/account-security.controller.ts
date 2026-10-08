@@ -3,15 +3,16 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { AuthResponse, MeResponse, RecoveryCodesResponse, TwoFactorSetupResponse } from '@card-trader/shared';
 import type { AuthUser } from '../../common/auth/auth-user';
-import { AllowWhilePasswordChangeRequired, CurrentUser } from '../../common/auth/decorators';
+import { AllowWhilePasswordChangeRequired, AllowWithoutPurchase, CurrentUser } from '../../common/auth/decorators';
 import { AuthService } from './auth.service';
 import { AppleSignInDto, ChangePasswordDto, GoogleSignInDto, TwoFactorCodeDto, TwoFactorProofDto } from './dto/auth.dto';
 import { TwoFactorService } from './two-factor.service';
 
-/** Security settings of the signed-in account. */
+/** Security settings of the signed-in account; available before the one-time unlock too. */
 @ApiTags('auth')
 @ApiBearerAuth()
 @Controller('auth')
+@AllowWithoutPurchase()
 export class AccountSecurityController {
   constructor(
     private readonly auth: AuthService,

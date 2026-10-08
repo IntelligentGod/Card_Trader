@@ -39,6 +39,11 @@ export const queryKeys = {
   eventMyInventory: (id: string) => ['events', 'detail', id, 'my-inventory'] as const,
   eventSearch: (id: string, filters: EventSearchQuery) => ['events', 'detail', id, 'search', filters] as const,
 
+  billing: ['billing'] as const,
+  billingStatus: ['billing', 'status'] as const,
+  /** the store's unlock package (price) */
+  billingPackage: ['billing', 'package'] as const,
+
   notifications: ['notifications'] as const,
   /** latest 6 (useQuery) — kept apart from notificationHistory, which holds useInfiniteQuery pages */
   notificationRecent: ['notifications', 'recent'] as const,

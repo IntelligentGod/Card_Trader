@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AdminAccessRequest,
   AdminAuditQuery,
   AdminBlockRequest,
   AdminBroadcastRequest,
@@ -123,6 +124,15 @@ export function useAdminChangeRole(publicId: string) {
 export function useAdminResetPassword(publicId: string) {
   const onSuccess = useUserSaved(publicId);
   return useMutation({ mutationFn: (body: AdminResetPasswordRequest) => api.admin.resetPassword(publicId, body), onSuccess });
+}
+
+/** Grants or revokes the one-time unlock without a store purchase. */
+export function useAdminAccess(publicId: string, grant: boolean) {
+  const onSuccess = useUserSaved(publicId);
+  return useMutation({
+    mutationFn: (body: AdminAccessRequest) => (grant ? api.admin.grantAccess(publicId, body) : api.admin.revokeAccess(publicId, body)),
+    onSuccess,
+  });
 }
 
 export function useAdminBlock(publicId: string, blocked: boolean) {

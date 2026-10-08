@@ -107,6 +107,26 @@ export class EnvironmentVariables {
   @IsString()
   TWO_FACTOR_ISSUER = 'Card Trader';
 
+  // ── One-time unlock (Google Play / App Store through RevenueCat) ──
+  /** false until the store products exist: every account has full access meanwhile */
+  @Transform(toBool)
+  @IsBoolean()
+  PAYWALL_ENABLED = false;
+
+  /** RevenueCat secret API key (server side only); empty = purchases can't be confirmed yet */
+  @IsOptional()
+  @IsString()
+  REVENUECAT_SECRET_KEY?: string;
+
+  /** value RevenueCat sends in the webhook's Authorization header */
+  @IsOptional()
+  @IsString()
+  REVENUECAT_WEBHOOK_SECRET?: string;
+
+  /** RevenueCat entitlement identifier the unlock grants */
+  @IsString()
+  PURCHASE_ENTITLEMENT_ID = 'full_access';
+
   @IsString()
   PRICING_PROVIDERS = 'MOCK';
 

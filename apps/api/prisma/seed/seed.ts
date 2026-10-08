@@ -116,8 +116,10 @@ async function main(): Promise<void> {
         passwordHash,
         publicId: generatePublicId(),
         role: seedUser.role ?? 'USER',
-        // Demo addresses can't receive mail; treat them as verified.
+        // Demo addresses can't receive mail; treat them as verified. Demo accounts are unlocked.
         emailVerifiedAt: new Date(),
+        paidAt: new Date(),
+        paidVia: 'SEED',
         profile: { create: { displayName: seedUser.displayName, bio: seedUser.bio, ...profileFields } },
         ...(vendorFields && { vendorProfile: { create: vendorFields } }),
       },

@@ -13,11 +13,14 @@ import {
   type AdminUserReviews,
   type CollectionItemResponse,
   type Paginated,
+  type PaidVia,
   type TradeStatus,
 } from '@card-trader/shared';
+import { hasFullAccess } from '../../common/auth/full-access';
 import { Errors } from '../../common/errors/app.exception';
 import { pageArgs, toPage, type CursorQueryDto } from '../../common/pagination/pagination';
 import { readSocialLinks } from '../../common/validation/social-links';
+import { AppConfig } from '../../config/app-config.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { collectionItemInclude, CollectionMapper } from '../collection/collection.mapper';
 import { adminTradeListInclude, tradeDetailInclude, TradeMapper } from '../trades/trade.mapper';
@@ -40,6 +43,7 @@ const reviewInclude = {
 @Injectable()
 export class AdminService {
   constructor(
+    private readonly config: AppConfig,
     private readonly prisma: PrismaService,
     private readonly users: UserMapper,
     private readonly trades: TradeMapper,
@@ -129,6 +133,7 @@ export class AdminService {
       tradeCount: user._count.tradeParticipations,
       emailVerified: user.emailVerifiedAt !== null,
       twoFactorEnabled: user.twoFactorEnabled,
+      hasFullAccess: hasFullAccess(user, this.config.get('PAYWALL_ENABLED')),
       lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
       createdAt: user.createdAt.toISOString(),
     }));
@@ -226,6 +231,9 @@ export class AdminService {
       authProviders: user.authProviders.map((p) => p.provider),
       blockedAt: user.blockedAt?.toISOString() ?? null,
       blockReason: user.blockReason,
+      hasFullAccess: hasFullAccess(user, this.config.get('PAYWALL_ENABLED')),
+      paidAt: user.paidAt?.toISOString() ?? null,
+      paidVia: (user.paidVia as PaidVia | null) ?? null,
       permissions: permissionsFor(viewer, user),
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),

@@ -3,6 +3,7 @@ import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import type { RootScreenProps } from '../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../theme';
 import { AdminUserRow } from './components';
@@ -17,6 +18,7 @@ export function AdminAdminsScreen({ navigation }: RootScreenProps<'AdminAdmins'>
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         <AppText color={colors.textMuted}>
           Admins manage regular users. Open an admin to change their role, reset their password or block them.

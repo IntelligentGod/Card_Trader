@@ -12,6 +12,7 @@ import { AdminAuditService, diffFields, type FieldChanges } from './admin-audit.
 import { AuditAction, permissionsFor, visibleAccounts, type Actor } from './admin-policy';
 import { AdminService } from './admin.service';
 import type {
+  AdminAccessDto,
   AdminBlockDto,
   AdminChangeRoleDto,
   AdminCreateAdminDto,
@@ -168,6 +169,32 @@ export class AdminUsersService {
       // The audit entry records that a reset happened, never the password.
       await this.audit.record(tx, this.entry(ctx, user.id, AuditAction.USER_PASSWORD_RESET, { mustChangePassword: { from: user.mustChangePassword, to: requireChange } }, dto.reason));
       await this.notice(tx, user.id, 'Your password was reset', 'An admin reset your password and signed you out. Use the new password you were given.');
+    });
+    return this.reads.getUser(ctx, publicId);
+  }
+
+  /** Unlocks the app for an account without a store purchase (testers, promotions, support). */
+  async grantAccess(ctx: AdminContext, publicId: string, dto: AdminAccessDto): Promise<AdminUserDetail> {
+    const user = await this.requireVisible(ctx, publicId);
+    if (!permissionsFor(ctx, user).block) throw forbidden('You can’t change this account’s access');
+    if (user.paidAt) throw Errors.conflict('ALREADY_HAS_ACCESS', 'This account already has full access');
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: user.id }, data: { paidAt: new Date(), paidVia: 'ADMIN' } });
+      await this.audit.record(tx, this.entry(ctx, user.id, AuditAction.ACCESS_GRANTED, { access: { from: false, to: true } }, dto.reason));
+      await this.notice(tx, user.id, 'Card Trader unlocked', 'An admin unlocked every feature for your account.');
+    });
+    return this.reads.getUser(ctx, publicId);
+  }
+
+  async revokeAccess(ctx: AdminContext, publicId: string, dto: AdminAccessDto): Promise<AdminUserDetail> {
+    const user = await this.requireVisible(ctx, publicId);
+    if (!permissionsFor(ctx, user).block) throw forbidden('You can’t change this account’s access');
+    if (!user.paidAt) throw Errors.conflict('NO_ACCESS_TO_REVOKE', 'This account has no unlock to revoke');
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: user.id }, data: { paidAt: null, paidVia: null } });
+      await this.audit.record(tx, this.entry(ctx, user.id, AuditAction.ACCESS_REVOKED, { access: { from: true, to: false }, paidVia: { from: user.paidVia, to: null } }, dto.reason));
     });
     return this.reads.getUser(ctx, publicId);
   }

@@ -2,6 +2,7 @@ import { act, fireEvent, render, renderHook, screen } from '@testing-library/rea
 import * as SecureStore from 'expo-secure-store';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
+import { ScreenBackground } from '../components/ScreenBackground';
 import { ThemeSelector } from '../features/profile/ThemeSelector';
 import { darkTheme, hydrateThemeMode, makeStyles, purpleTheme, THEME_MODES, themes, useTheme, useThemeMode } from '../theme';
 
@@ -55,6 +56,22 @@ describe('theme system', () => {
         expect({ mode, pair: `${fg} on ${bg}`, ok: contrast(colors[fg], colors[bg]) >= min }).toEqual({ mode, pair: `${fg} on ${bg}`, ok: true });
       }
     }
+  });
+
+  it('Purple Mode draws a gradient behind screens that text stays readable on; Dark Mode draws none', () => {
+    render(<ScreenBackground />);
+    const gradient = screen.getByTestId('screen-gradient');
+    expect(gradient).toBeTruthy();
+    const [top, bottom] = purpleTheme.backgroundGradient!;
+    // react-native-svg stores stop colors as packed signed ARGB integers.
+    const argb = (hex: string) => (0xff000000 | parseInt(hex.slice(1), 16)) | 0;
+    expect(JSON.stringify(screen.toJSON())).toEqual(expect.stringContaining(`"gradient":[0,${argb(top)},1,${argb(bottom)}]`));
+    expect(bottom).toBe(purpleTheme.colors.background);
+
+    setMode('dark');
+    render(<ScreenBackground />);
+    expect(screen.queryByTestId('screen-gradient')).toBeNull();
+    expect(darkTheme.backgroundGradient).toBeNull();
   });
 
   it('switches every consumer when a mode is picked in the selector, and saves the choice', () => {

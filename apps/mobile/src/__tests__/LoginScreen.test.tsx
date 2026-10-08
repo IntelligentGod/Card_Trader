@@ -55,6 +55,7 @@ describe('LoginScreen', () => {
         emailVerified: true,
         twoFactorEnabled: false,
         mustChangePassword: false,
+  hasFullAccess: true,
         hasPassword: true,
         authProviders: ['PASSWORD'],
         createdAt: '2026-09-30T00:00:00Z',

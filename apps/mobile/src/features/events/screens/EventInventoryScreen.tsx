@@ -12,6 +12,7 @@ import { CardRow } from '../../../components/CardRow';
 import { ListingBadge } from '../../../components/ListingBadge';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import type { RootScreenProps } from '../../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
@@ -73,6 +74,7 @@ export function EventInventoryScreen({ route, navigation }: RootScreenProps<'Eve
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <FlatList
         data={listed}
         keyExtractor={(i) => i.id}

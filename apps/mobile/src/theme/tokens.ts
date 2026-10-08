@@ -73,14 +73,16 @@ export interface AppTheme {
   categoryColors: CategoryColors;
   shadow: ShadowStyle;
   hero: HeroColors;
+  /** top → bottom screen gradient drawn behind every screen; null = solid `colors.background` */
+  backgroundGradient: readonly [string, string] | null;
 }
 
-/** Purple Mode (default): white and very light lavender surfaces, purple as the accent, dark-purple text. */
+/** Purple Mode (default): a soft lavender gradient behind white surfaces, purple as the accent, dark-purple text. */
 export const purpleTheme: AppTheme = {
   mode: 'purple',
   dark: false,
   colors: {
-    background: '#F7F5FC',
+    background: '#F7F4FD',
     surface: '#FFFFFF',
     surfaceMuted: '#F0ECF9',
     border: '#E6E0F2',
@@ -112,6 +114,8 @@ export const purpleTheme: AppTheme = {
   },
   shadow: { shadowColor: '#2A1B5E', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   hero: { gradient: ['#5B2BD9', '#7442EC', '#A784FF'], glow: '#4A1FC0' },
+  // Lavender at the top fading to the solid background; cards stay white on top of it.
+  backgroundGradient: ['#E4D7FF', '#F7F4FD'],
 };
 
 /** Dark Mode: deep purple-tinted charcoal, lighter raised surfaces, purple stays the accent. */
@@ -155,6 +159,7 @@ export const darkTheme: AppTheme = {
   shadow: { shadowColor: '#000000', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   // Deeper than Purple Mode so the card doesn't glare against the dark screen.
   hero: { gradient: ['#341A80', '#4A27B0', '#6A45D6'], glow: '#000000' },
+  backgroundGradient: null,
 };
 
 export const themes: Record<ThemeMode, AppTheme> = { purple: purpleTheme, dark: darkTheme };

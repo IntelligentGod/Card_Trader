@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native'
 import { ChipRow } from '../../components/Controls';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import type { RootScreenProps } from '../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../theme';
 import { AUDIT_FILTERS, auditQueryFor, type AuditFilter } from './adminText';
@@ -21,6 +22,7 @@ export function AdminAuditLogScreen({ navigation }: RootScreenProps<'AdminAuditL
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         <ChipRow options={CHIPS} value={filter === 'all' ? undefined : filter} onChange={(v) => setFilter(v ?? 'all')} allowNone="All" />
       </View>

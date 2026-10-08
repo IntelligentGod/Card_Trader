@@ -20,6 +20,7 @@ import { Chip, ChipRow, Segmented, TextField } from '../../../components/Control
 import { ListingBadge } from '../../../components/ListingBadge';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import type { RootScreenProps } from '../../../navigation/types';
 import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
@@ -98,6 +99,7 @@ export function EventSearchScreen({ route, navigation }: RootScreenProps<'EventS
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         {event.data ? (
           <AppText variant="caption" color={colors.textMuted}>

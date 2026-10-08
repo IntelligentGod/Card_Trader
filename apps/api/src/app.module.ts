@@ -3,11 +3,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
+import { PurchaseGuard } from './common/auth/purchase.guard';
 import { RolesGuard } from './common/auth/roles.guard';
 import { AppConfig } from './config/app-config.service';
 import { AppConfigModule } from './config/config.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { CardsModule } from './modules/cards/cards.module';
 import { CollectionModule } from './modules/collection/collection.module';
 import { EventsModule } from './modules/events/events.module';
@@ -54,6 +56,7 @@ import { PrismaModule } from './prisma/prisma.module';
     NotificationsModule,
     EventsModule,
     AdminModule,
+    BillingModule,
   ],
   controllers: [HealthController],
   providers: [
@@ -61,6 +64,7 @@ import { PrismaModule } from './prisma/prisma.module';
     // Order matters: authenticate first, then check the role.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: PurchaseGuard },
   ],
 })
 export class AppModule {}

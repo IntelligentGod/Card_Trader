@@ -10,6 +10,7 @@ import { CardRow } from '../../../components/CardRow';
 import { TextField } from '../../../components/Controls';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import type { RootScreenProps } from '../../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
@@ -84,6 +85,7 @@ export function TradeAddCardsScreen({ route }: RootScreenProps<'TradeAddCards'>)
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         <TextField placeholder="Search cards" value={search} onChangeText={setSearch} />
         {add.error ? <AppText color={colors.negative}>{errorMessage(add.error)}</AppText> : null}

@@ -50,6 +50,7 @@ import { TradeConfirmationScreen } from '../features/trades/screens/TradeConfirm
 import { TradeHistoryScreen } from '../features/trades/screens/TradeListScreens';
 import { OtherUserCollectionScreen } from '../features/users/OtherUserCollectionScreen';
 import { OtherUserProfileScreen } from '../features/users/OtherUserProfileScreen';
+import { PaywallScreen } from '../features/billing/PaywallScreen';
 import { useSession } from '../stores/session';
 import { useTheme } from '../theme';
 import { MainTabs } from './MainTabs';
@@ -62,16 +63,18 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * from anywhere (home, a scan, a trade) with a single navigate() call.
  */
 export function RootNavigator() {
-  const { colors } = useTheme();
+  const { colors, backgroundGradient } = useTheme();
   const status = useSession((s) => s.status);
   /** an admin reset the password: nothing else is allowed until it's changed */
   const mustChangePassword = useSession((s) => !!s.user?.mustChangePassword);
+  /** the one-time unlock hasn't been bought (an older cached profile without the field is left alone) */
+  const needsUnlock = useSession((s) => s.user?.hasFullAccess === false);
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerTintColor: colors.text,
-        headerStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: backgroundGradient?.[0] ?? colors.background },
         headerShadowVisible: false,
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.background },
@@ -94,6 +97,12 @@ export function RootNavigator() {
           component={ChangePasswordScreen}
           options={{ title: 'Choose a new password', headerBackVisible: false, gestureEnabled: false }}
         />
+      ) : needsUnlock ? (
+        <Stack.Group screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Paywall" component={PaywallScreen} />
+          <Stack.Screen name="HelpCenter" component={HelpCenterScreen} options={{ headerShown: true, title: 'Help Center' }} />
+          <Stack.Screen name="HelpArticle" component={HelpArticleScreen} options={{ headerShown: true, title: '' }} />
+        </Stack.Group>
       ) : (
         <>
           <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />

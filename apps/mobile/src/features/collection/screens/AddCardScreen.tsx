@@ -14,6 +14,7 @@ import type { RootScreenProps } from '../../../navigation/types';
 import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
 import { CollectionItemForm } from '../components/CollectionItemForm';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import { useCreateItem } from '../hooks';
 
 export function AddCardScreen({ navigation }: RootScreenProps<'AddCard'>) {
@@ -42,6 +43,7 @@ export function AddCardScreen({ navigation }: RootScreenProps<'AddCard'>) {
   if (selected) {
     return (
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScreenBackground />
         <ScrollView contentContainerStyle={styles.formContainer} keyboardShouldPersistTaps="handled">
           <View style={styles.selected}>
             <CardArt imageUrl={selected.imageUrl} name={selected.name} category={selected.category} width={72} />
@@ -73,6 +75,7 @@ export function AddCardScreen({ navigation }: RootScreenProps<'AddCard'>) {
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         <TextField
           placeholder="Search by name, player, character or number"
@@ -139,6 +142,6 @@ const useStyles = makeStyles(({ colors }) => ({
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
   result: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md },
   footer: { gap: spacing.sm, paddingVertical: spacing.xl },
-  formContainer: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl, backgroundColor: colors.background },
+  formContainer: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
   selected: { flexDirection: 'row', gap: spacing.md, alignItems: 'center', backgroundColor: colors.surface, padding: spacing.md, borderRadius: radius.md },
 }));

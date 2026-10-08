@@ -2,10 +2,12 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
+import { AppConfig } from '../../config/app-config.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Errors } from '../errors/app.exception';
 import type { AccessTokenPayload, AuthUser } from './auth-user';
 import { ALLOW_PASSWORD_CHANGE_PENDING_KEY, IS_PUBLIC_KEY } from './decorators';
+import { hasFullAccess } from './full-access';
 
 export const ACCOUNT_BLOCKED_MESSAGE = 'Your account has been blocked. Please contact support.';
 export const ACCOUNT_DISABLED_MESSAGE = 'This account has been disabled. Please contact support.';
@@ -21,6 +23,7 @@ export function inactiveAccountError(status: string) {
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
+    private readonly config: AppConfig,
     private readonly reflector: Reflector,
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
@@ -49,7 +52,7 @@ export class JwtAuthGuard implements CanActivate {
     // demotion applies at once instead of when the access token expires.
     const account = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { status: true, role: true, passwordChangedAt: true, mustChangePassword: true },
+      select: { status: true, role: true, passwordChangedAt: true, mustChangePassword: true, paidAt: true },
     });
     if (!account) throw Errors.unauthorized('ACCESS_TOKEN_INVALID', 'Access token is invalid or expired');
     if (account.status !== 'ACTIVE') throw inactiveAccountError(account.status);
@@ -62,7 +65,7 @@ export class JwtAuthGuard implements CanActivate {
       throw Errors.forbidden('PASSWORD_CHANGE_REQUIRED', 'Choose a new password to continue');
     }
 
-    request.user = { userId: payload.sub, publicId: payload.pid, role: account.role };
+    request.user = { userId: payload.sub, publicId: payload.pid, role: account.role, hasFullAccess: hasFullAccess(account, this.config.get('PAYWALL_ENABLED')) };
     return true;
   }
 }

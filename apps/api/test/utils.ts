@@ -45,7 +45,8 @@ export interface TestUser {
 
 let userCounter = 0;
 
-export async function registerUser(ctx: TestContext, displayName = 'Collector'): Promise<TestUser> {
+/** Registers through the API. Accounts are unlocked (as if bought) unless `paid: false`. */
+export async function registerUser(ctx: TestContext, displayName = 'Collector', options: { paid?: boolean } = {}): Promise<TestUser> {
   userCounter++;
   const email = `user${userCounter}-${Date.now()}@example.com`;
   const res = await ctx
@@ -55,6 +56,7 @@ export async function registerUser(ctx: TestContext, displayName = 'Collector'):
     .expect(201);
   const body = res.body as AuthResponse;
   const user = await ctx.prisma.user.findUniqueOrThrow({ where: { email } });
+  if (options.paid !== false) await ctx.prisma.user.update({ where: { id: user.id }, data: { paidAt: new Date(), paidVia: 'SEED' } });
   return {
     token: body.tokens.accessToken,
     refreshToken: body.tokens.refreshToken,

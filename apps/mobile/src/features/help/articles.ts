@@ -274,6 +274,17 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'unlock',
+    section: 'account',
+    title: 'Unlocking Card Trader',
+    summary: 'One payment of $4.99, for Android and iPhone.',
+    blocks: [
+      p('Card Trader is free to download and try signing up. A single payment of $4.99 (through Google Play or the App Store) unlocks every feature — there is no subscription.'),
+      p('The unlock belongs to your Card Trader account, not your phone: sign in with the same account on another phone or on iPhone and tap “I already paid” on the unlock screen.'),
+      p('Bought it but still see the unlock screen? Tap “Restore purchases” on the phone you bought it with, then “I already paid”. Refunds are handled by the store you paid in.'),
+    ],
+  },
+  {
     id: 'forgot-password',
     section: 'account',
     title: 'Change or reset your password',

@@ -87,6 +87,8 @@ export function diffUser(user: AdminUserDetail, form: UserForm, reason: string):
 
 // ───────────── Account actions ─────────────
 export interface AdminUserActions {
+  grantAccess: boolean;
+  revokeAccess: boolean;
   edit: boolean;
   /** the role a "Change role" action would set, or null when it is not offered */
   changeRoleTo: 'USER' | 'ADMIN' | null;
@@ -96,9 +98,12 @@ export interface AdminUserActions {
 }
 
 /** Which action buttons to show — driven only by the server's `permissions` (plus the current role/status). */
-export function adminUserActions(user: Pick<AdminUserDetail, 'role' | 'status' | 'permissions'>): AdminUserActions {
+export function adminUserActions(user: Pick<AdminUserDetail, 'role' | 'status' | 'permissions'> & { paidAt?: string | null }): AdminUserActions {
   const { permissions } = user;
   return {
+    // Admins have access through their role; the unlock only matters for USER accounts.
+    grantAccess: permissions.block && user.role === 'USER' && !user.paidAt,
+    revokeAccess: permissions.block && !!user.paidAt,
     edit: permissions.editProfile,
     changeRoleTo: permissions.changeRole && user.role !== 'SUPER_ADMIN' ? (user.role === 'ADMIN' ? 'USER' : 'ADMIN') : null,
     resetPassword: permissions.resetPassword,
@@ -108,7 +113,7 @@ export function adminUserActions(user: Pick<AdminUserDetail, 'role' | 'status' |
 }
 
 export const hasAnyAction = (actions: AdminUserActions) =>
-  actions.edit || actions.changeRoleTo !== null || actions.resetPassword || actions.block || actions.unblock;
+  actions.edit || actions.changeRoleTo !== null || actions.resetPassword || actions.block || actions.unblock || actions.grantAccess || actions.revokeAccess;
 
 // ───────────── Passwords, new admins, announcements ─────────────
 export const PASSWORD_MIN = 10;

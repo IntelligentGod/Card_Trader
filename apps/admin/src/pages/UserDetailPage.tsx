@@ -9,6 +9,7 @@ import {
   type CollectionItemResponse,
   type Paginated,
   type SocialLinks,
+  type PaidVia,
 } from '@card-trader/shared';
 import { useState } from 'react';
 import { qs, request } from '../api';
@@ -35,6 +36,14 @@ import { href, navigate, paths, useLocation } from '../router';
 import { TradeTable } from '../TradeTable';
 import { UserActions } from './UserActions';
 import { UserEditPanel } from './UserEdit';
+
+/** Where an account's one-time unlock came from. */
+const PAID_VIA_LABELS: Record<PaidVia, string> = {
+  APP_STORE: 'App Store purchase',
+  PLAY_STORE: 'Google Play purchase',
+  ADMIN: 'Granted by an admin',
+  SEED: 'Demo account',
+};
 
 const PAGE_SIZE = 50;
 const TABS = ['collection', 'trades', 'reviews', 'events', 'history'] as const;
@@ -416,6 +425,16 @@ function AccountInfo({ user: u }: { user: AdminUserDetail }) {
     <div className="account-box">
       <h2>Account</h2>
       <dl className="fields">
+        <Field label="Full access">
+          {u.hasFullAccess ? (
+            <>
+              {u.paidVia ? PAID_VIA_LABELS[u.paidVia] : 'Included with role'}
+              {u.paidAt && <span className="muted"> · {dateTime(u.paidAt)}</span>}
+            </>
+          ) : (
+            <Badge tone="amber">Not unlocked</Badge>
+          )}
+        </Field>
         <Field label="Two-factor authentication">
           <YesNo value={u.twoFactorEnabled} yes="Enabled" no="Off" />
         </Field>

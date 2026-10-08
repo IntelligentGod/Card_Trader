@@ -6,6 +6,7 @@ import type { AuthUser } from './auth-user';
 export const IS_PUBLIC_KEY = 'isPublic';
 export const ROLES_KEY = 'roles';
 export const ALLOW_PASSWORD_CHANGE_PENDING_KEY = 'allowPasswordChangePending';
+export const ALLOW_WITHOUT_PURCHASE_KEY = 'allowWithoutPurchase';
 
 /** Opt a route out of the global JWT guard. */
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
@@ -24,6 +25,12 @@ export const SuperAdminOnly = () => Roles('SUPER_ADMIN');
  * (everything else answers 403 PASSWORD_CHANGE_REQUIRED).
  */
 export const AllowWhilePasswordChangeRequired = () => SetMetadata(ALLOW_PASSWORD_CHANGE_PENDING_KEY, true);
+
+/**
+ * Routes an account may call before buying the one-time unlock (its own profile, account
+ * security, billing). Everything else answers 402 PAYMENT_REQUIRED while the paywall is on.
+ */
+export const AllowWithoutPurchase = () => SetMetadata(ALLOW_WITHOUT_PURCHASE_KEY, true);
 
 /** Client IP for the audit log; honours TRUST_PROXY via Express's req.ip. */
 export const ClientIp = createParamDecorator((_data: unknown, ctx: ExecutionContext): string | null => {

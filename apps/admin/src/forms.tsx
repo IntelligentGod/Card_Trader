@@ -229,6 +229,8 @@ export const AUDIT_ACTIONS = [
   'CARD_VERIFIED',
   'CARD_UNVERIFIED',
   'ANNOUNCEMENT_SENT',
+  'ACCESS_GRANTED',
+  'ACCESS_REVOKED',
 ] as const;
 
 const ACTION_LABELS: Record<string, string> = {
@@ -237,6 +239,8 @@ const ACTION_LABELS: Record<string, string> = {
   USER_PASSWORD_RESET: 'Password reset',
   ADMIN_DISABLED: 'Admin blocked',
   ADMIN_ENABLED: 'Admin unblocked',
+  ACCESS_GRANTED: 'Full access granted',
+  ACCESS_REVOKED: 'Full access revoked',
 };
 
 export function auditActionLabel(action: string): string {

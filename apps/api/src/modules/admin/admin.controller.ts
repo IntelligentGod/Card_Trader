@@ -29,6 +29,7 @@ import { AdminCardsService } from './admin-cards.service';
 import { AdminUsersService, type AdminContext } from './admin-users.service';
 import { AdminService } from './admin.service';
 import {
+  AdminAccessDto,
   AdminAuditQueryDto,
   AdminBlockDto,
   AdminBroadcastDto,
@@ -109,6 +110,19 @@ export class AdminController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   resetPassword(@Admin() ctx: AdminContext, @Param('publicId') publicId: string, @Body() dto: AdminResetPasswordDto): Promise<AdminUserDetail> {
     return this.accounts.resetPassword(ctx, requirePublicId(publicId), dto);
+  }
+
+  /** One-time unlock without a store purchase (testers, promotions, support cases). */
+  @Post('users/:publicId/grant-access')
+  @HttpCode(200)
+  grantAccess(@Admin() ctx: AdminContext, @Param('publicId') publicId: string, @Body() dto: AdminAccessDto): Promise<AdminUserDetail> {
+    return this.accounts.grantAccess(ctx, requirePublicId(publicId), dto);
+  }
+
+  @Post('users/:publicId/revoke-access')
+  @HttpCode(200)
+  revokeAccess(@Admin() ctx: AdminContext, @Param('publicId') publicId: string, @Body() dto: AdminAccessDto): Promise<AdminUserDetail> {
+    return this.accounts.revokeAccess(ctx, requirePublicId(publicId), dto);
   }
 
   @Post('users/:publicId/block')

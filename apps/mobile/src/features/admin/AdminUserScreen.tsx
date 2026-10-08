@@ -22,6 +22,7 @@ import { SkeletonBlock, SkeletonList } from '../../components/Skeleton';
 import { SocialLinksRow } from '../../components/Social';
 import { EmptyState, ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import { mediaUrl } from '../../config';
 import type { RootScreenProps } from '../../navigation/types';
 import { makeStyles, radius, spacing, useTheme } from '../../theme';
@@ -286,6 +287,7 @@ export function AdminUserScreen({ route, navigation }: RootScreenProps<'AdminUse
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <FlatList
         data={rows}
         keyExtractor={(row) => row.key}

@@ -8,7 +8,9 @@ import type {
   PublicVendorInfo,
   VendorProfileResponse,
 } from '@card-trader/shared';
+import { hasFullAccess } from '../../common/auth/full-access';
 import { readSocialLinks } from '../../common/validation/social-links';
+import { AppConfig } from '../../config/app-config.service';
 import { StorageService } from '../uploads/storage.service';
 
 /** Relations every user-facing query loads. */
@@ -33,7 +35,7 @@ export type PublicUserSource = { publicId: string; profile: Profile | null; vend
  */
 @Injectable()
 export class UserMapper {
-  constructor(private readonly storage: StorageService) {}
+  constructor(private readonly config: AppConfig, private readonly storage: StorageService) {}
 
   stats(profile: Profile | null): ProfileStats {
     const count = profile?.ratingCount ?? 0;
@@ -62,6 +64,7 @@ export class UserMapper {
       mustChangePassword: user.mustChangePassword,
       hasPassword: user.passwordHash !== null,
       authProviders: user.authProviders.map((p) => p.provider),
+      hasFullAccess: hasFullAccess(user, this.config.get('PAYWALL_ENABLED')),
       createdAt: user.createdAt.toISOString(),
     };
   }

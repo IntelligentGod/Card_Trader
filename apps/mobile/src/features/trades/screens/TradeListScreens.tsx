@@ -12,6 +12,7 @@ import { EmptyState, ErrorState } from '../../../components/States';
 import type { RootStackParamList, TabScreenProps } from '../../../navigation/types';
 import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { TradeListRow } from '../components/TradeListRow';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import { useTradeList } from '../hooks';
 
 function TradeList({ scope }: { scope: 'active' | 'history' }) {
@@ -64,6 +65,7 @@ export function ActiveTradesScreen({ navigation }: TabScreenProps<'Trade'>) {
   useRefreshOnFocus(REFRESH_ON_FOCUS);
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
+      <ScreenBackground />
       <View style={styles.header}>
         <AppText variant="title">Trade</AppText>
         <Pressable onPress={() => navigation.navigate('TradeHistory')} hitSlop={8}>
@@ -99,6 +101,7 @@ export function TradeHistoryScreen() {
   const styles = useStyles();
   return (
     <View style={styles.safe}>
+      <ScreenBackground />
       <TradeList scope="history" />
     </View>
   );

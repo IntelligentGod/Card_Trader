@@ -7,6 +7,7 @@ import { ChipRow, SectionHeader, TextField } from '../../components/Controls';
 import { SkeletonBlock, SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
 import { Surface } from '../../components/Surface';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
 import { makeStyles, spacing, useTheme } from '../../theme';
@@ -129,6 +130,7 @@ export function AdminHomeScreen({ navigation }: RootScreenProps<'AdminHome'>) {
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <FlatList
         data={users}
         keyExtractor={(u) => u.publicId}

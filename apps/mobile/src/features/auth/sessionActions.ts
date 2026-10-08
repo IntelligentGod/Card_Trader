@@ -6,6 +6,7 @@ import { queryKeys } from '../../api/queryKeys';
 import { useAuthNotice } from '../../stores/authNotice';
 import { secureStorage } from '../../stores/secureStorage';
 import { useSession } from '../../stores/session';
+import { identifyPurchaser, resetPurchaser } from '../billing/purchases';
 
 /**
  * Restores the session on app start. If the server is unreachable (poor signal
@@ -27,6 +28,7 @@ export async function bootstrapSession(): Promise<void> {
       accessToken,
       accessTokenExpiresIn: Math.max(0, (useSession.getState().accessTokenExpiresAt - Date.now()) / 1000),
     });
+    void identifyPurchaser(me.publicId);
   } catch (error) {
     const cached = await secureStorage.getCachedUser();
     if (error instanceof ApiError && error.isNetwork && cached) {
@@ -44,6 +46,7 @@ export async function completeSignIn(response: AuthResponse): Promise<void> {
   queryClient.setQueryData(queryKeys.me, response.user);
   useAuthNotice.getState().setNotice(null);
   useSession.getState().setSignedIn(response.user, response.tokens);
+  void identifyPurchaser(response.user.publicId);
 }
 
 /**
@@ -76,6 +79,7 @@ export function refreshMe(): Promise<MeResponse> {
 }
 
 export async function signOut(): Promise<void> {
+  void resetPurchaser();
   const refreshToken = await secureStorage.getRefreshToken();
   if (refreshToken) {
     // Best effort: revoke server-side, but always clear locally.
@@ -99,4 +103,5 @@ registerSessionHandlers({
   onAccountClosed: (message) => void endSession(message),
   onPasswordChangeRequired: () => void refreshMe().catch(() => undefined),
   onSessionEnded: (message) => useAuthNotice.getState().setNotice(message),
+  onPaymentRequired: () => void refreshMe().catch(() => undefined),
 });

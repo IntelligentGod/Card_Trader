@@ -21,6 +21,8 @@ export type RootStackParamList = {
   TwoFactorVerify: { challengeToken: string; expiresIn: number };
   /** forced (admin reset) when user.mustChangePassword, otherwise from Security */
   ChangePassword: undefined;
+  /** the one-time unlock; shown while user.hasFullAccess is false */
+  Paywall: undefined;
   Security: undefined;
   EnableTwoFactor: undefined;
   /** shown once; leaving needs "I saved these codes" */

@@ -4,6 +4,7 @@ import { TRADE_STATUS_LABELS, TRADE_STATUSES, type TradeStatus } from '@card-tra
 import { ChipRow } from '../../components/Controls';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import type { RootScreenProps } from '../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../theme';
 import { AdminTradeRow, TRADE_STATUS_COLOR } from './components';
@@ -22,6 +23,7 @@ export function AdminTradesScreen({ navigation }: RootScreenProps<'AdminTrades'>
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         <ChipRow options={statusOptions} value={status} onChange={setStatus} allowNone="All" />
       </View>

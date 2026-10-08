@@ -14,6 +14,10 @@ process.env.PRICING_PROVIDERS = 'MOCK';
 process.env.TWO_FACTOR_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString('base64');
 process.env.GOOGLE_CLIENT_IDS = 'test-google-client.apps.googleusercontent.com';
 process.env.APPLE_CLIENT_IDS = 'com.cardtrader.app';
+// The paywall is on in tests (registerUser unlocks accounts); the store itself is not configured.
+process.env.PAYWALL_ENABLED = 'true';
+process.env.REVENUECAT_SECRET_KEY = '';
+process.env.REVENUECAT_WEBHOOK_SECRET = 'test-webhook-secret';
 // Empty (not deleted) so apps/api/.env cannot fill them in: no bootstrap.
 process.env.SUPER_ADMIN_EMAIL = '';
 process.env.SUPER_ADMIN_INITIAL_PASSWORD = '';

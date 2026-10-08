@@ -18,6 +18,7 @@ const user = (role: MeResponse['role']): MeResponse => ({
   emailVerified: true,
   twoFactorEnabled: false,
   mustChangePassword: false,
+  hasFullAccess: true,
   hasPassword: true,
   authProviders: ['PASSWORD'],
   username: 'tom',

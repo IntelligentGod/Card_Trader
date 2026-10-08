@@ -6,6 +6,7 @@ import { CardRow } from '../../components/CardRow';
 import { ChipRow, TextField } from '../../components/Controls';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../components/States';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import type { RootScreenProps } from '../../navigation/types';
 import { makeStyles, spacing, useTheme } from '../../theme';
 import { cardSubtitle } from '../../utils/format';
@@ -39,6 +40,7 @@ export function AdminCardsScreen({ navigation }: RootScreenProps<'AdminCards'>) 
 
   return (
     <View style={styles.container}>
+      <ScreenBackground />
       <View style={styles.header}>
         <TextField
           placeholder="Search name, number, subject or set"

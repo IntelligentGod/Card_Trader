@@ -8,6 +8,7 @@ import { isValidPublicId } from '@card-trader/shared';
 import { AppText } from '../../components/AppText';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/Controls';
+import { ScreenBackground } from '../../components/ScreenBackground';
 import type { RootScreenProps } from '../../navigation/types';
 import { useSession } from '../../stores/session';
 import { makeStyles, radius, spacing, useTheme } from '../../theme';
@@ -57,6 +58,7 @@ export function QrScannerScreen({ navigation }: RootScreenProps<'QrScanner'>) {
   if (!permission.granted) {
     return (
       <SafeAreaView style={styles.permission}>
+        <ScreenBackground />
         <AppText variant="title" align="center">
           Scan to trade
         </AppText>

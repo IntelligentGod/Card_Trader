@@ -20,6 +20,7 @@ import { ChipRow, TextField } from '../../../components/Controls';
 import { ListingBadge } from '../../../components/ListingBadge';
 import { SkeletonList } from '../../../components/Skeleton';
 import { EmptyState, ErrorState } from '../../../components/States';
+import { ScreenBackground } from '../../../components/ScreenBackground';
 import type { TabScreenProps } from '../../../navigation/types';
 import { makeStyles, radius, spacing, useTheme } from '../../../theme';
 import { cardSubtitle } from '../../../utils/format';
@@ -72,6 +73,7 @@ export function MyCollectionScreen({ navigation }: TabScreenProps<'Inventory'>) 
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
+      <ScreenBackground />
       <View style={styles.header}>
         <AppText variant="title">Inventory</AppText>
         <TextField placeholder="Search your cards" value={search} onChangeText={setSearch} returnKeyType="search" />
