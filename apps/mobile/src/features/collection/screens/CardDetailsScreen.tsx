@@ -5,9 +5,9 @@ import { errorMessage } from '../../../api/client';
 import { AppText } from '../../../components/AppText';
 import { Button } from '../../../components/Button';
 import { CardArt } from '../../../components/CardArt';
-import { SectionHeader } from '../../../components/Controls';
 import { LineChart } from '../../../components/LineChart';
 import { PriceText } from '../../../components/PriceText';
+import { RecentSales } from '../../../components/RecentSales';
 import { Disclaimer, Screen } from '../../../components/Screen';
 import { SkeletonBlock } from '../../../components/Skeleton';
 import { ErrorState } from '../../../components/States';
@@ -15,11 +15,11 @@ import { Surface } from '../../../components/Surface';
 import { trendColors } from '../../../components/TrendBadge';
 import type { RootScreenProps } from '../../../navigation/types';
 import { spacing, useTheme } from '../../../theme';
-import { cardSubtitle, formatDateShort } from '../../../utils/format';
+import { cardSubtitle } from '../../../utils/format';
 import { useCollectionItem, useDeleteItem, useItemMarketValue, useItemPriceHistory } from '../hooks';
 
 const CONFIDENCE_TEXT = {
-  HIGH: 'Based on 3 recent comparable sales',
+  HIGH: 'Average of the 3 most recent comparable sales',
   MEDIUM: 'Based on older comparable sales',
   LOW: 'Few comparable sales — treat as a rough guide',
   NONE: 'No comparable sales yet',
@@ -109,26 +109,7 @@ export function CardDetailsScreen({ route, navigation }: RootScreenProps<'CardDe
         ) : null}
       </Surface>
 
-      <Surface>
-        <SectionHeader title="Last sold" />
-        {market.isPending ? (
-          <SkeletonBlock height={72} />
-        ) : market.data && market.data.recentSales.length > 0 ? (
-          market.data.recentSales.map((sale, index) => (
-            <View key={sale.id} style={styles.saleRow}>
-              <AppText color={colors.textMuted}>{index + 1}.</AppText>
-              <AppText variant="bodyStrong" style={styles.flex}>
-                {formatCents(sale.priceCents)}
-              </AppText>
-              <AppText color={colors.textMuted}>
-                {formatDateShort(sale.soldAt)} · {sale.source}
-              </AppText>
-            </View>
-          ))
-        ) : (
-          <AppText color={colors.textMuted}>No comparable sales yet. Prices refresh in the background.</AppText>
-        )}
-      </Surface>
+      <RecentSales card={data.card} tierKey={data.tierKey} market={market.data} isPending={market.isPending} />
 
       <Pressable onPress={() => navigation.navigate('CardPriceChart', { itemId })}>
         <Surface>
@@ -186,7 +167,6 @@ const styles = StyleSheet.create({
   hero: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, alignItems: 'center' },
   heroText: { flex: 1, minWidth: 160, gap: spacing.xs },
   gap: { gap: spacing.sm },
-  saleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   detail: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.lg },
   detailValue: { flexShrink: 1, textAlign: 'right' },

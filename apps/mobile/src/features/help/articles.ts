@@ -212,7 +212,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: 'How market values are estimated',
     summary: 'Recent comparable sales of the same card and grade.',
     blocks: [
-      p('Market values are estimates based on recent comparable sales. For each card, the estimate uses the median of the three most recent sales of the same card in the same condition or grade.'),
+      p('Market values are estimates based on recent comparable sales. For each card, the suggested price is the average of the three most recent sales of the same card in the same condition or grade. Card details also link to 130point so you can check recent sold listings yourself.'),
       p('Raw cards are never compared with graded cards, and grades from different companies are kept apart. You can see the comparable sales on the card’s details screen under “Last sold”.'),
       tip('Values are a guide, not an offer. The final price in a trade is whatever both of you agree.'),
     ],

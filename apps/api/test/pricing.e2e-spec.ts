@@ -62,7 +62,7 @@ describe('Pricing worker (e2e)', () => {
 
     const value = await prisma.cardMarketValue.findUniqueOrThrow({ where: { id: queued.id } });
     expect(value.valueCents).toBeGreaterThan(0);
-    expect(value.algorithm).toBe('median-last-3@v1');
+    expect(value.algorithm).toBe('average-last-3@v1');
     expect(value.lockedUntil).toBeNull();
     expect(value.nextRefreshAt.getTime()).toBeGreaterThan(Date.now());
 

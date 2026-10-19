@@ -75,7 +75,7 @@ CHECK constraints and trigram search indexes are in
 * 130point: no authorized public API → no integration (no scraping).
 * `listing-matcher.ts` scores title matches; low-confidence sales are stored
   but excluded (`isExcluded`) so they never skew estimates.
-* `MarketValueService` + `MarketValueStrategy` (MVP: `MedianOfLastNStrategy(3, 180d)`).
+* `MarketValueService` + `MarketValueStrategy` (current: `AverageOfLastNStrategy(3, 180d)`, the average of the last 3 sales; `MedianOfLastNStrategy` is kept as an alternative).
   The algorithm id is stored on every estimate.
 
 ## Collection valuation

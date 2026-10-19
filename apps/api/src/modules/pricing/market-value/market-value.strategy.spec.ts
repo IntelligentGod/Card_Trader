@@ -1,5 +1,5 @@
 import { DAY_MS } from '../../../common/utils/dates';
-import { median, MedianOfLastNStrategy } from './market-value.strategy';
+import { average, AverageOfLastNStrategy, median, MedianOfLastNStrategy } from './market-value.strategy';
 
 const now = new Date('2026-09-30T12:00:00Z');
 const daysAgo = (days: number) => new Date(now.getTime() - days * DAY_MS);
@@ -37,5 +37,34 @@ describe('MedianOfLastNStrategy', () => {
 
   it('records its algorithm id', () => {
     expect(strategy.id).toBe('median-last-3@v1');
+  });
+});
+
+describe('average', () => {
+  it('rounds to whole cents', () => {
+    expect(average([22000, 21000, 21500])).toBe(21500);
+    expect(average([100, 100, 101])).toBe(100);
+    expect(average([100, 101, 101])).toBe(101);
+  });
+});
+
+describe('AverageOfLastNStrategy', () => {
+  const strategy = new AverageOfLastNStrategy(3, 180);
+
+  it('suggests the average of the 3 most recent sales: $200, $210, $250 → $220 (HIGH)', () => {
+    const estimate = strategy.estimate([sale(900, 50), sale(200, 1), sale(210, 3), sale(250, 4)], now);
+    expect(estimate).toEqual({ valueCents: 22000, confidence: 'HIGH', sampleSize: 3, lastSaleAt: daysAgo(1) });
+  });
+
+  it('averages what it has when there are fewer than 3 sales (LOW)', () => {
+    expect(strategy.estimate([sale(100, 1), sale(150, 2)], now)).toMatchObject({ valueCents: 12500, confidence: 'LOW', sampleSize: 2 });
+  });
+
+  it('ignores sales older than the max age or in the future', () => {
+    expect(strategy.estimate([sale(100, 200), sale(500, -1)], now).valueCents).toBeNull();
+  });
+
+  it('records its algorithm id', () => {
+    expect(strategy.id).toBe('average-last-3@v1');
   });
 });

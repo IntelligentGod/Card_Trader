@@ -8,16 +8,15 @@ import { api } from '../../../api/endpoints';
 import { AppText } from '../../../components/AppText';
 import { Button } from '../../../components/Button';
 import { CardArt } from '../../../components/CardArt';
-import { SectionHeader } from '../../../components/Controls';
 import { ListingBadge } from '../../../components/ListingBadge';
 import { Avatar } from '../../../components/Profile';
+import { RecentSales } from '../../../components/RecentSales';
 import { Disclaimer, Screen } from '../../../components/Screen';
-import { SkeletonBlock } from '../../../components/Skeleton';
 import { Surface } from '../../../components/Surface';
 import type { RootScreenProps } from '../../../navigation/types';
 import { useSession } from '../../../stores/session';
 import { makeStyles, radius, spacing, useTheme } from '../../../theme';
-import { cardSubtitle, formatDateShort } from '../../../utils/format';
+import { cardSubtitle } from '../../../utils/format';
 import { useStartTrade } from '../../trades/useStartTrade';
 
 /** "View Card" from Search This Event: the card, its comps, and who has it at which table. */
@@ -81,25 +80,7 @@ export function EventListingScreen({ route, navigation }: RootScreenProps<'Event
         <Detail label="Estimated value" value={item.estimatedValueCents !== null ? formatCents(item.estimatedValueCents) : 'Not priced yet'} />
       </Surface>
 
-      <Surface>
-        <SectionHeader title="Last 3 comparable sales" />
-        {comps.isPending ? (
-          <SkeletonBlock height={64} />
-        ) : comps.data && comps.data.recentSales.length > 0 ? (
-          comps.data.recentSales.map((sale) => (
-            <View key={sale.id} style={styles.saleRow}>
-              <AppText variant="bodyStrong" style={styles.flex}>
-                {formatCents(sale.priceCents)}
-              </AppText>
-              <AppText color={colors.textMuted}>
-                {formatDateShort(sale.soldAt)} · {sale.source}
-              </AppText>
-            </View>
-          ))
-        ) : (
-          <AppText color={colors.textMuted}>No comparable sales yet.</AppText>
-        )}
-      </Surface>
+      <RecentSales card={item.card} tierKey={item.tierKey} market={comps.data} isPending={comps.isPending} />
 
       <Pressable
         style={({ pressed }) => [styles.vendor, pressed && styles.pressed]}
@@ -150,7 +131,6 @@ const useStyles = makeStyles(({ colors }) => ({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   flex: { flex: 1 },
   detail: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.lg },
-  saleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
   vendor: {
     flexDirection: 'row',
     alignItems: 'center',

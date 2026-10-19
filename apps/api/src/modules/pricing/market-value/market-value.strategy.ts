@@ -15,7 +15,7 @@ export interface MarketEstimate {
 
 /**
  * Pluggable valuation algorithm. MarketValueService depends on this interface,
- * so the MVP median can be swapped (weighted recency, outlier trimming,
+ * so the valuation (average, median) can be swapped (weighted recency, outlier trimming,
  * multi-source blending...) without touching callers. The id is stored on each
  * estimate so we always know which algorithm produced a value.
  */
@@ -38,17 +38,24 @@ export function median(values: readonly number[]): number {
   return Math.round((sorted[mid - 1]! + sorted[mid]!) / 2);
 }
 
-/** MVP: median of the last N valid comparable sales (N = 3). */
-export class MedianOfLastNStrategy implements MarketValueStrategy {
+export function average(values: readonly number[]): number {
+  return Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
+}
+
+/** Combines the last N valid comparable sales into one value; subclasses choose how. */
+abstract class LastNStrategy implements MarketValueStrategy {
   readonly id: string;
 
   constructor(
-    readonly sampleSize = 3,
-    readonly maxAgeDays = 180,
-    private readonly freshDays = 90,
+    name: string,
+    readonly sampleSize: number,
+    readonly maxAgeDays: number,
+    private readonly freshDays: number,
   ) {
-    this.id = `median-last-${sampleSize}@v1`;
+    this.id = `${name}-last-${sampleSize}@v1`;
   }
+
+  protected abstract combine(prices: readonly number[]): number;
 
   estimate(sales: readonly ComparableSale[], asOf: Date): MarketEstimate {
     const oldest = asOf.getTime() - this.maxAgeDays * DAY_MS;
@@ -65,10 +72,32 @@ export class MedianOfLastNStrategy implements MarketValueStrategy {
       usable.length < this.sampleSize ? 'LOW' : allFresh ? 'HIGH' : 'MEDIUM';
 
     return {
-      valueCents: median(usable.map((s) => s.priceCents)),
+      valueCents: this.combine(usable.map((s) => s.priceCents)),
       confidence,
       sampleSize: usable.length,
       lastSaleAt: usable[0]!.soldAt,
     };
+  }
+}
+
+/** Median of the last N valid comparable sales (the original MVP valuation). */
+export class MedianOfLastNStrategy extends LastNStrategy {
+  constructor(sampleSize = 3, maxAgeDays = 180, freshDays = 90) {
+    super('median', sampleSize, maxAgeDays, freshDays);
+  }
+
+  protected combine(prices: readonly number[]): number {
+    return median(prices);
+  }
+}
+
+/** Suggested price: the average of the last N valid comparable sales (N = 3). */
+export class AverageOfLastNStrategy extends LastNStrategy {
+  constructor(sampleSize = 3, maxAgeDays = 180, freshDays = 90) {
+    super('average', sampleSize, maxAgeDays, freshDays);
+  }
+
+  protected combine(prices: readonly number[]): number {
+    return average(prices);
   }
 }

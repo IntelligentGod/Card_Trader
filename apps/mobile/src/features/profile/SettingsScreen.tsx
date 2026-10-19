@@ -58,7 +58,7 @@ export function SettingsScreen({ navigation }: RootScreenProps<'Settings'>) {
           About prices
         </AppText>
         <AppText color={colors.textMuted}>
-          {MARKET_VALUE_DISCLAIMER} Estimates use the median of the three most recent sales of the same card in the same condition or grade.
+          {MARKET_VALUE_DISCLAIMER} Estimates use the average of the three most recent sales of the same card in the same condition or grade.
           Raw cards are never compared with graded cards.
         </AppText>
       </Surface>
