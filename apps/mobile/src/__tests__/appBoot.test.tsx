@@ -116,13 +116,14 @@ describe('App boots on the phone', () => {
     expect(screen.queryByText('Unlock Card Trader')).toBeNull();
   });
 
-  it('signed in with Dark Mode saved: boots in Dark Mode', async () => {
+  it('signed in with Dark Mode saved by an older version: boots in the light purple theme', async () => {
     await SecureStore.setItemAsync('ct.refreshToken', 'refresh-token');
     await SecureStore.setItemAsync('ct.themeMode', 'dark');
     await boot();
     expect(await screen.findByText(/Tom/)).toBeTruthy();
+    expect(screen.getAllByTestId('screen-gradient').length).toBeGreaterThan(0);
     await act(async () => fireEvent.press(tab('Profile')));
     await act(async () => fireEvent.press(await screen.findByText('Settings')));
-    expect(screen.getByLabelText('Dark Mode')).toHaveProp('accessibilityState', { checked: true });
+    expect(screen.queryByText('Dark Mode')).toBeNull();
   });
 });

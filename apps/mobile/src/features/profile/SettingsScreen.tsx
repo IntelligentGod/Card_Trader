@@ -12,7 +12,6 @@ import { useSession } from '../../stores/session';
 import { useUiPrefs } from '../../stores/uiPrefs';
 import { spacing, useTheme } from '../../theme';
 import { signOut } from '../auth/sessionActions';
-import { ThemeSelector } from './ThemeSelector';
 
 export function SettingsScreen({ navigation }: RootScreenProps<'Settings'>) {
   const { colors } = useTheme();
@@ -37,13 +36,6 @@ export function SettingsScreen({ navigation }: RootScreenProps<'Settings'>) {
           onPress={() => navigation.navigate('Security')}
         />
         <LinkRow icon="help-circle-outline" label="Help Center" onPress={() => navigation.navigate('HelpCenter')} />
-      </Surface>
-
-      <Surface style={styles.group}>
-        <AppText variant="label" color={colors.textMuted}>
-          Appearance
-        </AppText>
-        <ThemeSelector />
       </Surface>
 
       <Surface style={styles.group}>

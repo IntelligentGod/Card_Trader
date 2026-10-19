@@ -62,7 +62,8 @@ export interface HeroColors {
   glow: string;
 }
 
-export const THEME_MODES = ['purple', 'dark'] as const;
+/** One theme for now: light, with the purple gradient. */
+export const THEME_MODES = ['purple'] as const;
 export type ThemeMode = (typeof THEME_MODES)[number];
 
 export interface AppTheme {
@@ -118,55 +119,10 @@ export const purpleTheme: AppTheme = {
   backgroundGradient: ['#E4D7FF', '#F7F4FD'],
 };
 
-/** Dark Mode: deep purple-tinted charcoal, lighter raised surfaces, purple stays the accent. */
-export const darkTheme: AppTheme = {
-  mode: 'dark',
-  dark: true,
-  colors: {
-    background: '#0F0D16',
-    surface: '#1A1724',
-    surfaceMuted: '#252131',
-    border: '#2F2A3E',
-    divider: '#28243A',
-    inputBackground: '#211D2D',
-    text: '#F2F0F8',
-    textMuted: '#ABA5BE',
-    textSubtle: '#7B7591',
-    icon: '#C9C4D8',
-    primary: '#A585FA',
-    primaryPressed: '#9070F2',
-    primarySoft: '#2B2246',
-    // Light purple accent with dark text on it: the only way both purple links on dark cards
-    // and labels on purple buttons stay readable (WCAG AA).
-    onPrimary: '#170F2E',
-    secondary: '#E879F9',
-    positive: '#3DCB82',
-    positiveSoft: '#14301F',
-    negative: '#F26B6B',
-    negativeSoft: '#3A1B1F',
-    warning: '#F2B43C',
-    warningSoft: '#3A2D12',
-    white: '#FFFFFF',
-    black: '#000000',
-    overlay: 'rgba(0, 0, 0, 0.65)',
-  },
-  categoryColors: {
-    POKEMON: { main: '#F5B82E', soft: '#3A2F12' },
-    ONE_PIECE: { main: '#F0625C', soft: '#3B1D1C' },
-    SPORTS: { main: '#5B8DF5', soft: '#1B2945' },
-  },
-  // Shadows barely read on dark backgrounds; surfaces are separated by tone and borders instead.
-  shadow: { shadowColor: '#000000', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  // Deeper than Purple Mode so the card doesn't glare against the dark screen.
-  hero: { gradient: ['#341A80', '#4A27B0', '#6A45D6'], glow: '#000000' },
-  backgroundGradient: null,
-};
-
-export const themes: Record<ThemeMode, AppTheme> = { purple: purpleTheme, dark: darkTheme };
+export const themes: Record<ThemeMode, AppTheme> = { purple: purpleTheme };
 export const DEFAULT_THEME_MODE: ThemeMode = 'purple';
 export const THEME_LABELS: Record<ThemeMode, { title: string; description: string }> = {
   purple: { title: 'Purple Mode', description: 'Light and bright with purple accents' },
-  dark: { title: 'Dark Mode', description: 'Easy on the eyes in low light' },
 };
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
